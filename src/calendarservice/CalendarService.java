@@ -1,6 +1,8 @@
 package calendarservice;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -79,16 +81,19 @@ public class CalendarService extends JFrame {
 			monthLabel = new JLabel("", JLabel.CENTER);
 			updateMonthLabel();
 
-			/*
-			 * prevButton.addActionListener(new ActionListener() {
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        changeMonth(-1);
-    }
-});
-			 */
-			prevButton.addActionListener(e -> changeMonth(-1)); //뒤로 넘기는 경우
-			nextButton.addActionListener(e -> changeMonth(1)); //앞으로 넘기는 경우
+
+			prevButton.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					changeMonth(-1);
+				}
+			}); //뒤로 넘기는 경우
+			nextButton.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					changeMonth(1);
+				}
+			}); //앞으로 넘기는 경우
 
 			navPanel.add(prevButton, BorderLayout.WEST);
 			navPanel.add(monthLabel, BorderLayout.CENTER);
@@ -139,10 +144,10 @@ public class CalendarService extends JFrame {
 			datePanel.removeAll(); //매달 새롭게 날짜를 추가하기 위해서 초기화
 			addDaysOfWeek(); //요일 표시
 
-			Calendar cal = Calendar.getInstance(); //Calender 객체를 생성하여 현재 연도와 월로 초기화
+			Calendar cal = Calendar.getInstance(); //Calendar 객체를 생성하여 현재 연도와 월로 초기화
 			cal.set(year, month, 1); //현재 월의 첫번째 날로 설정
 
-			int startDay = cal.get(Calendar.DAY_OF_WEEK) - 1; //현재 달의 첫번째 요일을 가져옴
+			int startDay = cal.get(Calendar.DAY_OF_WEEK) - 1; //현재 달의 첫번째 요일을 가져옴(인덱스에 맞추기 위하여 1을 빼줌)
 			int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH); //현재 월의 마지막 날짜를 가져옴
 
 			// 빈칸 추가 (해당 월 시작 요일 전까지 빈 공간 채우기)
@@ -150,18 +155,17 @@ public class CalendarService extends JFrame {
 				datePanel.add(new JLabel(""));
 			}
 
-			// 날짜 버튼 추가
+			// 해당 월의 각 날짜에 대해 버튼을 추가
 			for (int day = 1; day <= daysInMonth; day++) {
 				int currentDay = day;
-				LocalDate currentDate = LocalDate.of(year, month + 1, currentDay);
+				LocalDate currentDate = LocalDate.of(year, month + 1, currentDay); //지정된 연도, 월, 일로 LocalDate 객체를 생성
 				cal.set(Calendar.DAY_OF_MONTH, day);  // 현재 날짜 설정
 
-				JButton dayButton = new JButton(String.valueOf(currentDay));
+				JButton dayButton = new JButton(String.valueOf(currentDay)); //currentDay를 문자열로 바꿔서 dayButton에 내용에 출력
 
 				// 공휴일 또는 주말 여부에 따라 스타일 변경
 				if (holidayManager.isHoliday(currentDate) || cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY || cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
 					dayButton.setForeground(Color.RED); // 공휴일 및 주말을 빨간색으로 표시
-					dayButton.setToolTipText("공휴일 또는 주말");
 				} else {
 					dayButton.setForeground(Color.BLACK);
 				}
@@ -172,9 +176,14 @@ public class CalendarService extends JFrame {
 				dayButton.setFocusPainted(false);
 				dayButton.setHorizontalAlignment(JButton.CENTER);
 
-				// 날짜 선택 이벤트 추가
-				dayButton.addActionListener(e -> showScheduleDialog(year, month + 1, currentDay));
-				datePanel.add(dayButton);
+				// 날짜 버튼 추가
+				dayButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						showScheduleDialog(year, month + 1, currentDay); // 클릭 시 실행할 메서드 호출
+					}
+				});
+				datePanel.add(dayButton); // 패널에 버튼 추가
 			}
 
 			// 나머지 빈칸 추가 (해당 월의 마지막 날짜 이후 빈 공간 채우기)
@@ -202,7 +211,12 @@ public class CalendarService extends JFrame {
 
 			// 일정 추가 버튼
 			JButton addButton = new JButton("일정 추가");
-			addButton.addActionListener(e -> openScheduleInputDialog(dateKey));
+			addButton.addActionListener(new ActionListener() {
+			    @Override
+			    public void actionPerformed(ActionEvent e) {
+			        openScheduleInputDialog(dateKey); // 클릭 시 실행할 메서드 호출
+			    }
+			});
 
 			dialog.add(dateLabel, BorderLayout.NORTH);
 			dialog.add(scheduleArea, BorderLayout.CENTER);
