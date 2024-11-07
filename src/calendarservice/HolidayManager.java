@@ -1,4 +1,4 @@
-package calenderservice;
+package calendarservice;
 
 import java.time.LocalDate;
 import java.util.HashSet;
