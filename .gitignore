@@ -1,0 +1,20 @@
+/bin/
+
+# 상위 디렉터리 무시
+/../../*
+
+# 무시할 파일 및 폴더
+Thumbs.db
+*.lnk
+*.ini
+
+# 이클립스 및 IDE 관련 설정 무시
+.classpath
+.project
+.settings/
+
+# 프로젝트 폴더의 특정 파일만 포함
+!src/         # 소스 폴더 포함
+!*.java       # .java 파일 포함
+!.gitignore   # .gitignore 파일 포함
+
