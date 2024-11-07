@@ -193,7 +193,7 @@ public class CalendarService extends JFrame {
 			}
 
 			datePanel.revalidate();
-			datePanel.repaint();
+			datePanel.repaint(); //날짜를 다시 추가한 후에 화면에 변경 사항을 반영
 		}
 
 		// 선택한 날짜의 저장된 일정을 보여주는 다이얼로그 창
@@ -214,7 +214,7 @@ public class CalendarService extends JFrame {
 			addButton.addActionListener(new ActionListener() {
 			    @Override
 			    public void actionPerformed(ActionEvent e) {
-			        openScheduleInputDialog(dateKey); // 클릭 시 실행할 메서드 호출
+			        openSchedule(dateKey); // 클릭 시 실행할 메서드 호출
 			    }
 			});
 
@@ -226,10 +226,9 @@ public class CalendarService extends JFrame {
 			dialog.setVisible(true);
 		}
 
-		// 일정 입력 창으로 연결하는 메서드 (임시 구현)
-		private void openScheduleInputDialog(String dateKey) {
+		// 일정 입력 창으로 연결하는 메서드
+		private void openSchedule(String dateKey) {
 			System.out.println("일정 입력 창을 호출합니다. 날짜: " + dateKey);
-			// 일정 입력 창 호출 구현을 다른 담당자에게 넘깁니다.
 		}
 	}
 
