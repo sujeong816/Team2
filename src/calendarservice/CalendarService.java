@@ -23,7 +23,7 @@ public class CalendarService extends JFrame {
 		c.setBackground(Color.white);
 
 		scheduleMap = new HashMap<>(); // 일정 저장용 Map 초기화
-		holidayManager = new HolidayManager(LocalDate.now().getYear());  // 현재 연도의 공휴일 관리
+		holidayManager = new HolidayManager();  // 공휴일 관리자를 모든 연도로 초기화
 
 		// 중앙에 캘린더 패널 추가
 		CalendarPanel calendarPanel = new CalendarPanel();
@@ -49,19 +49,12 @@ public class CalendarService extends JFrame {
 		monthSchedulePanel.add(new JLabel("10/21-10/25 ➔ 시험"));
 		tabbedPane.addTab("이번달 일정", monthSchedulePanel);
 
-		// 두 번째 탭: 이번주 일정
-		JPanel weekSchedulePanel = new JPanel();
-		weekSchedulePanel.setLayout(new BoxLayout(weekSchedulePanel, BoxLayout.Y_AXIS));
-		weekSchedulePanel.add(new JLabel("10/30 ➔ 13:30 동아리"));
-		weekSchedulePanel.add(new JLabel("10/30 ➔ 18:00 회식"));
-		tabbedPane.addTab("이번주 일정", weekSchedulePanel);
-
 		// 카테고리 패널을 NORTH에, 탭 패널을 CENTER에 추가하여 서쪽에 배치
 		westPanel.add(categoryPanel, BorderLayout.NORTH);
 		westPanel.add(tabbedPane, BorderLayout.CENTER);
 		c.add(westPanel, BorderLayout.WEST);
 
-		setSize(1000, 800);
+		setSize(1000, 600);
 		setVisible(true);
 	}
 
@@ -118,6 +111,9 @@ public class CalendarService extends JFrame {
 			}
 			updateMonthLabel();
 			addDates();
+			
+			 // 이번 달과 이번 주 일정을 업데이트
+	        updateMonthSchedulePanel();
 		}
 
 		//월 업데이트 메서드
@@ -133,102 +129,136 @@ public class CalendarService extends JFrame {
 		//요일 표시
 		private void addDaysOfWeek() {
 			String[] days = {"일", "월", "화", "수", "목", "금", "토"};
+			Font dayLabelFont = new Font("Arial", Font.BOLD, 18);
 			for (String day : days) {
 				JLabel dayLabel = new JLabel(day, JLabel.CENTER);
+				// dayLabel.setFont(dayLabelFont); // 요일 글씨 크기 설정
 				datePanel.add(dayLabel);
 			}
 		}
 
 		//날짜 추가 메서드
 		private void addDates() {
-			datePanel.removeAll(); //매달 새롭게 날짜를 추가하기 위해서 초기화
-			addDaysOfWeek(); //요일 표시
+		    datePanel.removeAll(); // 이전 데이터 제거
+		    addDaysOfWeek(); // 요일 추가
 
-			Calendar cal = Calendar.getInstance(); //Calendar 객체를 생성하여 현재 연도와 월로 초기화
-			cal.set(year, month, 1); //현재 월의 첫번째 날로 설정
+		    Calendar cal = Calendar.getInstance();
+		    cal.set(year, month, 1);
 
-			int startDay = cal.get(Calendar.DAY_OF_WEEK) - 1; //현재 달의 첫번째 요일을 가져옴(인덱스에 맞추기 위하여 1을 빼줌)
-			int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH); //현재 월의 마지막 날짜를 가져옴
+		    int startDay = cal.get(Calendar.DAY_OF_WEEK) - 1;
+		    int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
 
-			// 빈칸 추가 (해당 월 시작 요일 전까지 빈 공간 채우기)
-			for (int i = 0; i < startDay; i++) {
-				datePanel.add(new JLabel(""));
-			}
+		    Font dayFont = new Font("Arial", Font.BOLD, 20); // 날짜 버튼 폰트
 
-			// 해당 월의 각 날짜에 대해 버튼을 추가
-			for (int day = 1; day <= daysInMonth; day++) {
-				int currentDay = day;
-				LocalDate currentDate = LocalDate.of(year, month + 1, currentDay); //지정된 연도, 월, 일로 LocalDate 객체를 생성
-				cal.set(Calendar.DAY_OF_MONTH, day);  // 현재 날짜 설정
+		    for (int i = 0; i < startDay; i++) {
+		        datePanel.add(new JLabel(""));
+		    }
 
-				JButton dayButton = new JButton(String.valueOf(currentDay)); //currentDay를 문자열로 바꿔서 dayButton에 내용에 출력
+		    for (int day = 1; day <= daysInMonth; day++) {
+		        int currentDay = day;
+		        LocalDate currentDate = LocalDate.of(year, month + 1, currentDay);
 
-				// 공휴일 또는 주말 여부에 따라 스타일 변경
-				if (holidayManager.isHoliday(currentDate) || cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY || cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
-					dayButton.setForeground(Color.RED); // 공휴일 및 주말을 빨간색으로 표시
-				} else {
-					dayButton.setForeground(Color.BLACK);
-				}
+		        // 일정 개수 확인
+		        String dateKey = year + "/" + (month + 1) + "/" + currentDay;
+		        int scheduleCount = countSchedulesForDate(dateKey);
 
-				// 기본 스타일 설정
-				dayButton.setContentAreaFilled(false);
-				dayButton.setBorderPainted(false);
-				dayButton.setFocusPainted(false);
-				dayButton.setHorizontalAlignment(JButton.CENTER);
+		        // 버튼 텍스트 생성 (HTML 사용)
+		        String buttonText = "<html><div style='text-align: center;'>" + currentDay;
+		        String holidayName = holidayManager.getHolidayName(year, currentDate);
+		        if (holidayName != null) {
+		            buttonText += "<br><span style='font-size:10px; color:red;'>" + holidayName + "</span>";
+		        }
+		        if (scheduleCount > 0) {
+		            buttonText += "<br><span style='font-size:10px; color:blue;'>일정 " + scheduleCount + "개</span>";
+		        }
+		        buttonText += "</div></html>";
 
-				// 날짜 버튼 추가
-				dayButton.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						showScheduleDialog(year, month + 1, currentDay); // 클릭 시 실행할 메서드 호출
-					}
-				});
-				datePanel.add(dayButton); // 패널에 버튼 추가
-			}
+		        JButton dayButton = new JButton(buttonText);
+		        dayButton.setFont(dayFont);
+		        dayButton.setContentAreaFilled(false);
 
-			// 나머지 빈칸 추가 (해당 월의 마지막 날짜 이후 빈 공간 채우기)
-			int totalCells = 42;
-			for (int i = startDay + daysInMonth; i < totalCells; i++) {
-				datePanel.add(new JLabel(""));
-			}
+		        // 오늘 날짜 강조
+		        if (currentDate.equals(LocalDate.now())) {
+		            dayButton.setBorder(BorderFactory.createLineBorder(Color.BLUE, 2));
+		        }
 
-			datePanel.revalidate();
-			datePanel.repaint(); //날짜를 다시 추가한 후에 화면에 변경 사항을 반영
+		        // 주말 및 공휴일 색상
+		        if (holidayName != null || cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY || cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
+		            dayButton.setForeground(Color.RED);
+		        } else {
+		            dayButton.setForeground(Color.BLACK);
+		        }
+
+		        // 날짜 클릭 이벤트
+		        dayButton.addActionListener(e -> showScheduleDialog(year, month + 1, currentDay));
+
+		        datePanel.add(dayButton);
+		        cal.add(Calendar.DAY_OF_MONTH, 1);
+		    }
+
+		    for (int i = startDay + daysInMonth; i < 42; i++) {
+		        datePanel.add(new JLabel(""));
+		    }
+
+		    datePanel.revalidate();
+		    datePanel.repaint();
 		}
+		
+		// 이번 달 일정을 업데이트하는 메서드
+	    private void updateMonthSchedulePanel() {
+	        JPanel monthSchedulePanel = new JPanel();
+	        monthSchedulePanel.setLayout(new BoxLayout(monthSchedulePanel, BoxLayout.Y_AXIS));
+	        LocalDate currentDate = LocalDate.of(year, month + 1, 1);
 
-		// 선택한 날짜의 저장된 일정을 보여주는 다이얼로그 창
-		private void showScheduleDialog(int year, int month, int day) {
-			String dateKey = year + "/" + month + "/" + day;
-			String schedule = scheduleMap.getOrDefault(dateKey, "일정 없음");
+	        // 현재 달의 일정을 검색하여 패널에 추가
+	        scheduleMap.forEach((date, schedule) -> {
+	            LocalDate eventDate = LocalDate.parse(date);
+	            if (eventDate.getYear() == currentDate.getYear() && eventDate.getMonthValue() == currentDate.getMonthValue()) {
+	                monthSchedulePanel.add(new JLabel(date + " ➔ " + schedule));
+	            }
+	        });
 
-			JDialog dialog = new JDialog(CalendarService.this, "일정: " + dateKey, true);
-			dialog.setSize(300, 200);
-			dialog.setLayout(new BorderLayout());
+	        tabbedPane.setComponentAt(0, monthSchedulePanel);
+	    }
 
-			JLabel dateLabel = new JLabel("일정 보기: " + dateKey, JLabel.CENTER);
-			JTextArea scheduleArea = new JTextArea(schedule);
-			scheduleArea.setEditable(false); // 읽기 전용으로 설정
 
-			// 일정 추가 버튼
-			JButton addButton = new JButton("일정 추가");
-			addButton.addActionListener(new ActionListener() {
-			    @Override
-			    public void actionPerformed(ActionEvent e) {
-			        openSchedule(dateKey); // 클릭 시 실행할 메서드 호출
-			    }
-			});
+	    private void showScheduleDialog(int year, int month, int day) {
+	        String dateKey = year + "/" + month + "/" + day;
+	        String schedule = scheduleMap.getOrDefault(dateKey, "일정 없음");
 
-			dialog.add(dateLabel, BorderLayout.NORTH);
-			dialog.add(scheduleArea, BorderLayout.CENTER);
-			dialog.add(addButton, BorderLayout.SOUTH);
+	        JDialog dialog = new JDialog(CalendarService.this, "일정: " + dateKey, true);
+	        dialog.setSize(300, 200);
+	        dialog.setLayout(new BorderLayout());
 
-			dialog.setLocationRelativeTo(this);
-			dialog.setVisible(true);
-		}
+	        JLabel dateLabel = new JLabel("일정 보기: " + dateKey, JLabel.CENTER);
+	        JTextArea scheduleArea = new JTextArea(schedule);
+	        scheduleArea.setEditable(false);
+
+	        JButton addButton = new JButton("일정 추가");
+	        addButton.addActionListener(e -> openSchedule(dateKey));
+
+	        dialog.add(dateLabel, BorderLayout.NORTH);
+	        dialog.add(scheduleArea, BorderLayout.CENTER);
+	        dialog.add(addButton, BorderLayout.SOUTH);
+
+	        dialog.setLocationRelativeTo(this);
+	        dialog.setVisible(true);
+	    }
 
 		// 일정 입력 창으로 연결하는 메서드
 		private void openSchedule(String dateKey) {
 			System.out.println("일정 입력 창을 호출합니다. 날짜: " + dateKey);
+		}
+		
+		// 특정 날짜의 일정 개수를 반환
+		private int countSchedulesForDate(String dateKey) {
+		    int count = 0;
+		    for (String key : scheduleMap.keySet()) {
+		        if (key.equals(dateKey)) {
+		            count++;
+		        }
+		    }
+		    return count;
 		}
 	}
 
