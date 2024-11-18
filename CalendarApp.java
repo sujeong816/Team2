@@ -1,44 +1,45 @@
+package Project;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.io.*;
-import java.util.List;  // java.util.List ÀÓÆ÷Æ®
-import java.util.Map;   // java.util.Map ÀÓÆ÷Æ®
-import java.util.ArrayList; // java.util.ArrayList ÀÓÆ÷Æ®
-import java.util.HashMap;  // java.util.HashMap ÀÓÆ÷Æ®
-
+import java.util.List;
 
 public class CalendarApp extends JFrame {
     private LocalDate currentDate;
     private JLabel monthYearLabel;
     private JPanel calendarPanel;
     private JTextArea scheduleTextArea;
-    private Map<LocalDate, List<String>> scheduleMap; // ³¯Â¥º° ÀÏÁ¤ ¸®½ºÆ® ÀúÀå
+    private Map<LocalDate, List<String>> scheduleMap;
 
     public CalendarApp() {
         currentDate = LocalDate.now();
-        scheduleMap = new HashMap<>(); // ÀÏÁ¤ ÀúÀå¿ë ¸Ê ÃÊ±âÈ­
-        loadSchedules();  // ÇÁ·Î±×·¥ ½ÃÀÛ ½Ã ÀÏÁ¤ ºÒ·¯¿À±â
+        scheduleMap = new HashMap<>();
+        loadSchedules();
 
-        setTitle("Ä¶¸°´õ ¾ÖÇÃ¸®ÄÉÀÌ¼Ç");
+        setTitle("ìº˜ë¦°ë” ì• í”Œë¦¬ì¼€ì´ì…˜");
         setSize(800, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // »ó´Ü ÆĞ³Î: ¿ù ÀÌµ¿ ¹öÆ° ¹× ÇöÀç ¿ù Ç¥½Ã
+        // ê¸°ë³¸ ë°°ê²½ í°ìƒ‰ìœ¼ë¡œ ì„¤ì •
+        getContentPane().setBackground(Color.WHITE);
+
+        // ìƒë‹¨ íŒ¨ë„
         JPanel topPanel = new JPanel(new BorderLayout());
-        JButton prevButton = new JButton("<");
+        topPanel.setBackground(Color.WHITE); // ìƒë‹¨ íŒ¨ë„ ë°°ê²½ í°ìƒ‰
+        JButton prevButton = createStyledButton("<");
         prevButton.addActionListener(e -> {
             currentDate = currentDate.minusMonths(1);
             updateCalendar();
         });
 
-        JButton nextButton = new JButton(">");
+        JButton nextButton = createStyledButton(">");
         nextButton.addActionListener(e -> {
             currentDate = currentDate.plusMonths(1);
             updateCalendar();
@@ -46,61 +47,71 @@ public class CalendarApp extends JFrame {
 
         monthYearLabel = new JLabel();
         monthYearLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        monthYearLabel.setFont(new Font("ë§‘ì€ ê³ ë”•", Font.BOLD, 16));
         topPanel.add(prevButton, BorderLayout.WEST);
         topPanel.add(monthYearLabel, BorderLayout.CENTER);
         topPanel.add(nextButton, BorderLayout.EAST);
 
         add(topPanel, BorderLayout.NORTH);
 
-        // ÁÂÃø ÆĞ³Î: ÀÏÁ¤ Ãß°¡ ¹öÆ°
+        // ì¢Œì¸¡ íŒ¨ë„
         JPanel leftPanel = new JPanel(new BorderLayout());
-        JButton addScheduleButton = new JButton("³» Ä¶¸°´õ (ÀÏÁ¤ Ãß°¡)");
-        addScheduleButton.addActionListener(e -> addSchedule());
+        leftPanel.setBackground(Color.WHITE); // ì¢Œì¸¡ íŒ¨ë„ ë°°ê²½ í°ìƒ‰
+        JButton addScheduleButton = createStyledButton("ë‚´ ìº˜ë¦°ë” (ì¼ì • ì¶”ê°€)");
+        addScheduleButton.addActionListener(e -> openAddPlan());
         leftPanel.add(addScheduleButton, BorderLayout.NORTH);
 
         add(leftPanel, BorderLayout.WEST);
 
-        // Áß¾Ó ÆĞ³Î: ´Ş·Â
+        // ì¤‘ì•™ íŒ¨ë„: ë‹¬ë ¥
         calendarPanel = new JPanel(new GridLayout(0, 7));
+        calendarPanel.setBackground(Color.WHITE); // ë‹¬ë ¥ íŒ¨ë„ ë°°ê²½ í°ìƒ‰
         updateCalendar();
         add(calendarPanel, BorderLayout.CENTER);
 
-        // ¿ìÃø ÆĞ³Î: ÀÏÁ¤ »ó¼¼º¸±â
-        scheduleTextArea = new JTextArea();
-        scheduleTextArea.setEditable(false);
-        add(new JScrollPane(scheduleTextArea), BorderLayout.EAST);
+        // ìš°ì¸¡ íŒ¨ë„: ì¼ì • ìƒì„¸ë³´ê¸°
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.setBackground(Color.WHITE); // ìš°ì¸¡ íŒ¨ë„ ë°°ê²½ í°ìƒ‰
+        scheduleTextArea = createStyledTextArea(20, 10);
+        rightPanel.add(new JScrollPane(scheduleTextArea), BorderLayout.CENTER);
+        add(rightPanel, BorderLayout.EAST);
     }
 
     private void updateCalendar() {
-        monthYearLabel.setText(currentDate.getYear() + "³â " + currentDate.getMonth().getDisplayName(TextStyle.FULL, Locale.KOREAN));
+        monthYearLabel.setText(currentDate.getYear() + "ë…„ " + currentDate.getMonth().getDisplayName(TextStyle.FULL, Locale.KOREAN));
         calendarPanel.removeAll();
 
-        // ¿äÀÏ Ç¥½Ã
-        String[] daysOfWeek = {"ÀÏ", "¿ù", "È­", "¼ö", "¸ñ", "±İ", "Åä"};
+        // ìš”ì¼ í‘œì‹œ
+        String[] daysOfWeek = {"ì¼", "ì›”", "í™”", "ìˆ˜", "ëª©", "ê¸ˆ", "í† "};
         for (String day : daysOfWeek) {
             JLabel dayLabel = new JLabel(day, SwingConstants.CENTER);
+            dayLabel.setFont(new Font("ë§‘ì€ ê³ ë”•", Font.BOLD, 12));
+            dayLabel.setOpaque(true);
+            dayLabel.setBackground(Color.WHITE); // ìš”ì¼ ë°°ê²½ í°ìƒ‰
             calendarPanel.add(dayLabel);
         }
 
-        // ³¯Â¥ Ç¥½Ã
+        // ë‚ ì§œ í‘œì‹œ
         LocalDate firstDayOfMonth = currentDate.withDayOfMonth(1);
         int dayOfWeek = firstDayOfMonth.getDayOfWeek().getValue() % 7;
 
         for (int i = 0; i < dayOfWeek; i++) {
-            calendarPanel.add(new JLabel()); // ºó Ä­
+            calendarPanel.add(new JLabel()); // ë¹ˆ ì¹¸
         }
 
         int daysInMonth = currentDate.lengthOfMonth();
         for (int day = 1; day <= daysInMonth; day++) {
-            LocalDate date = currentDate.withDayOfMonth(day); // ³¯Â¥ °´Ã¼¸¦ Á÷Á¢ »ı¼º
+            LocalDate date = currentDate.withDayOfMonth(day);
             JButton dayButton = new JButton(String.valueOf(day));
-            dayButton.addActionListener(e -> showSchedule(date)); // ÇØ´ç ³¯Â¥·Î showSchedule È£Ãâ
+            dayButton.setBackground(Color.WHITE); // ë‚ ì§œ ë²„íŠ¼ ë°°ê²½ í°ìƒ‰
+            dayButton.setFocusPainted(false);
+            dayButton.setFont(new Font("ë§‘ì€ ê³ ë”•", Font.PLAIN, 12));
+            dayButton.addActionListener(e -> showSchedule(date));
 
-            // ÀÏÁ¤ÀÌ ÀÖ´Â ³¯Â¥´Â »ö»óÀ¸·Î Ç¥½Ã
+            // ì¼ì • ìˆëŠ” ë‚ ì§œ í‘œì‹œ
             if (scheduleMap.containsKey(date)) {
-                dayButton.setBackground(Color.CYAN);
+                dayButton.setForeground(Color.BLUE);
             }
-
             calendarPanel.add(dayButton);
         }
 
@@ -108,43 +119,55 @@ public class CalendarApp extends JFrame {
         calendarPanel.repaint();
     }
 
+    private void openAddPlan() {
+        AddPlan addPlan = new AddPlan();
+        addPlan.setVisible(true);
+
+        // AddPlan ì°½ ë‹«íŒ í›„ ì¼ì • ë°ì´í„° ìƒˆë¡œê³ ì¹¨
+        addPlan.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                FileManager.LoadSaveData(); // FileManagerì—ì„œ ë°ì´í„° ìƒˆë¡œ ë¡œë“œ
+                updateCalendar(); // ë‹¬ë ¥ ìƒˆë¡œê³ ì¹¨
+            }
+        });
+    }
+
+
     private void addSchedule() {
-        String dateInput = JOptionPane.showInputDialog("ÀÏÁ¤ ³¯Â¥ (¿¹: 2024-04-14): ");
-        String time = JOptionPane.showInputDialog("ÀÏÁ¤ ½Ã°£ (¿¹: ¿ÀÈÄ 1½Ã): ");
-        String title = JOptionPane.showInputDialog("ÀÏÁ¤ Á¦¸ñ: ");
+        String dateInput = JOptionPane.showInputDialog("ì¼ì • ë‚ ì§œ (ì˜ˆ: 2024-04-14): ");
+        String time = JOptionPane.showInputDialog("ì¼ì • ì‹œê°„ (ì˜ˆ: ì˜¤í›„ 1ì‹œ): ");
+        String title = JOptionPane.showInputDialog("ì¼ì • ì œëª©: ");
 
         if (dateInput != null && time != null && title != null) {
             try {
                 LocalDate date = LocalDate.parse(dateInput, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 String schedule = time + " - " + title;
 
-                // ÀÏÁ¤ Ãß°¡ ¶Ç´Â »õ·Î¿î ¸®½ºÆ®¿¡ Ãß°¡
                 scheduleMap.computeIfAbsent(date, k -> new ArrayList<>()).add(schedule);
-                saveSchedules();  // ÀÏÁ¤ ÀúÀå
-                JOptionPane.showMessageDialog(this, "ÀÏÁ¤ÀÌ ÀúÀåµÇ¾ú½À´Ï´Ù.");
+                saveSchedules();
+                JOptionPane.showMessageDialog(this, "ì¼ì •ì´ ì €ì¥ë˜ì—ˆìŠµë‹ˆë‹¤.");
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Àß¸øµÈ ³¯Â¥ Çü½ÄÀÔ´Ï´Ù. (¿¹: 2024-04-14)");
+                JOptionPane.showMessageDialog(this, "ì˜ëª»ëœ ë‚ ì§œ í˜•ì‹ì…ë‹ˆë‹¤. (ì˜ˆ: 2024-04-14)");
             }
         }
     }
 
     private void showSchedule(LocalDate date) {
-        scheduleTextArea.setText("³¯Â¥: " + date + "\n\n");
+        scheduleTextArea.setText("ë‚ ì§œ: " + date + "\n\n");
         List<String> scheduleList = scheduleMap.get(date);
         if (scheduleList != null && !scheduleList.isEmpty()) {
-            scheduleTextArea.append("ÀÏÁ¤:\n");
+            scheduleTextArea.append("ì¼ì •:\n");
             for (String schedule : scheduleList) {
                 scheduleTextArea.append("- " + schedule + "\n");
             }
         } else {
-            scheduleTextArea.append("ÀÏÁ¤ÀÌ ¾ø½À´Ï´Ù.");
+            scheduleTextArea.append("ì¼ì •ì´ ì—†ìŠµë‹ˆë‹¤.");
         }
     }
 
-    // ÀÏÁ¤ µ¥ÀÌÅÍ¸¦ ÅØ½ºÆ® ÆÄÀÏ·Î ÀúÀå
     private void saveSchedules() {
-        try {
-            FileWriter writer = new FileWriter("schedules.txt");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("schedules.txt"))) {
             for (Map.Entry<LocalDate, List<String>> entry : scheduleMap.entrySet()) {
                 LocalDate date = entry.getKey();
                 List<String> schedules = entry.getValue();
@@ -153,43 +176,53 @@ public class CalendarApp extends JFrame {
                     writer.write("  " + schedule + "\n");
                 }
             }
-            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // ÅØ½ºÆ® ÆÄÀÏ¿¡¼­ ÀÏÁ¤ µ¥ÀÌÅÍ ºÒ·¯¿À±â
     private void loadSchedules() {
-        try {
-            File file = new File("schedules.txt");
-            if (file.exists()) {
-                BufferedReader reader = new BufferedReader(new FileReader(file));
-                String line;
-                LocalDate currentDate = null;
-                List<String> schedules = null;
+        try (BufferedReader reader = new BufferedReader(new FileReader("schedules.txt"))) {
+            String line;
+            LocalDate currentDate = null;
+            List<String> schedules = null;
 
-                while ((line = reader.readLine()) != null) {
-                    if (line.trim().isEmpty()) continue; // ºó ÁÙ °Ç³Ê¶Ù±â
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
 
-                    if (line.startsWith("20")) { // ³¯Â¥ Çü½Ä (¿¹: 2024-04-14)
-                        if (currentDate != null && schedules != null) {
-                            scheduleMap.put(currentDate, schedules);
-                        }
-                        currentDate = LocalDate.parse(line.trim());
-                        schedules = new ArrayList<>();
-                    } else {
-                        schedules.add(line.trim());
+                if (line.startsWith("20")) {
+                    if (currentDate != null && schedules != null) {
+                        scheduleMap.put(currentDate, schedules);
                     }
+                    currentDate = LocalDate.parse(line.trim());
+                    schedules = new ArrayList<>();
+                } else {
+                    schedules.add(line.trim());
                 }
-                if (currentDate != null && schedules != null) {
-                    scheduleMap.put(currentDate, schedules);
-                }
-                reader.close();
+            }
+            if (currentDate != null && schedules != null) {
+                scheduleMap.put(currentDate, schedules);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setBackground(new Color(34, 139, 34));
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setFont(new Font("ë§‘ì€ ê³ ë”•", Font.BOLD, 14));
+        button.setBorder(BorderFactory.createLineBorder(new Color(17, 122, 55), 1));
+        return button;
+    }
+
+    private JTextArea createStyledTextArea(int rows, int columns) {
+        JTextArea textArea = new JTextArea(rows, columns);
+        textArea.setBackground(new Color(230, 230, 230)); // íšŒìƒ‰
+        textArea.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        return textArea;
     }
 
     public static void main(String[] args) {
