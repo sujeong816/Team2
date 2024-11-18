@@ -26,7 +26,7 @@ public class AddPlan extends JFrame {
     public AddPlan() {
         setTitle("일정 관리");
         setSize(900, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE); // 창 닫아도 부모 창이 꺼지지 않음
         setLocationRelativeTo(null);
 
         FileManager.LoadSaveData();
@@ -35,6 +35,7 @@ public class AddPlan extends JFrame {
         mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
         mainPanel.setBackground(Color.WHITE);
 
+        // Left panel: Schedule list
         JPanel leftPanel = new JPanel(new BorderLayout(10, 10));
         leftPanel.setBackground(Color.WHITE);
 
@@ -43,8 +44,7 @@ public class AddPlan extends JFrame {
         leftPanel.add(scheduleListLabel, BorderLayout.NORTH);
 
         scheduleListModel = new DefaultListModel<>();
-        FileManager.schedules.forEach(scheduleListModel::addElement); 
-        
+        FileManager.schedules.forEach(scheduleListModel::addElement);
 
         scheduleList = new JList<>(scheduleListModel);
         scheduleList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -52,8 +52,10 @@ public class AddPlan extends JFrame {
         JScrollPane scrollPane = new JScrollPane(scheduleList);
         leftPanel.add(scrollPane, BorderLayout.CENTER);
 
+        // Buttons: Edit and Delete
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBackground(Color.WHITE);
+
         editButton = createStyledButton("수정하기");
         JButton deleteButton = createStyledButton("삭제하기");
 
@@ -69,7 +71,7 @@ public class AddPlan extends JFrame {
             int selectedIndex = scheduleList.getSelectedIndex();
             if (selectedIndex != -1) {
                 FileManager.Schedule schedule = scheduleListModel.getElementAt(selectedIndex);
-                FileManager.schedules.remove(schedule); 
+                FileManager.schedules.remove(schedule);
                 FileManager.SaveAllData();
                 scheduleListModel.remove(selectedIndex);
             }
@@ -79,7 +81,10 @@ public class AddPlan extends JFrame {
         buttonPanel.add(deleteButton);
         leftPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        
+        // Add left panel to main
+        mainPanel.add(leftPanel);
+
+        // Right panel: Add/Edit schedule
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setBackground(Color.WHITE);
@@ -90,9 +95,10 @@ public class AddPlan extends JFrame {
         rightPanel.add(addScheduleLabel);
         rightPanel.add(Box.createVerticalStrut(10));
 
+        // Category selection
         JPanel categoryPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         categoryPanel.setBackground(Color.WHITE);
-        
+
         JLabel categoryLabel = new JLabel("카테고리:");
         categoryButton = createStyledButton("카테고리 선택");
         categoryButton.addActionListener(e -> showCategoryDialog());
@@ -100,9 +106,10 @@ public class AddPlan extends JFrame {
         categoryPanel.add(categoryButton);
         rightPanel.add(categoryPanel);
 
+        // Date and time selection
         JPanel datePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         datePanel.setBackground(Color.WHITE);
-        
+
         JLabel startDateTimeLabel = new JLabel("시작일시:");
         startDateTimeSpinner = new JSpinner(new SpinnerDateModel());
         startDateTimeSpinner.setEditor(new JSpinner.DateEditor(startDateTimeSpinner, "yyyy-MM-dd HH:mm"));
@@ -117,18 +124,20 @@ public class AddPlan extends JFrame {
         datePanel.add(endDateTimeSpinner);
         rightPanel.add(datePanel);
 
+        // Title input
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         titlePanel.setBackground(Color.WHITE);
-        
+
         JLabel titleLabel = new JLabel("일정 제목:");
         titleField = createStyledTextField(20);
         titlePanel.add(titleLabel);
         titlePanel.add(titleField);
         rightPanel.add(titlePanel);
 
+        // Memo input
         JPanel memoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         memoPanel.setBackground(Color.WHITE);
-        
+
         JLabel memoLabel = new JLabel("일정 메모:");
         memoField = new JTextArea(4, 20);
         memoField.setLineWrap(true);
@@ -140,6 +149,7 @@ public class AddPlan extends JFrame {
         memoPanel.add(memoScrollPane);
         rightPanel.add(memoPanel);
 
+        // Add/Update button
         addButton = createStyledButton("추가하기");
         addButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         addButton.addActionListener(e -> {
@@ -168,17 +178,10 @@ public class AddPlan extends JFrame {
         rightPanel.add(Box.createVerticalStrut(10));
         rightPanel.add(addButton);
 
-        mainPanel.add(leftPanel);
+        // Add right panel to main
         mainPanel.add(rightPanel);
-        add(mainPanel);
 
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent e) {
-                FileManager.SaveAllData();
-                System.exit(0);
-            }
-        });
+        add(mainPanel);
 
         setVisible(true);
     }
