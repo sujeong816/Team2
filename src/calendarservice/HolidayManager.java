@@ -5,14 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HolidayManager {
-    // 내부적으로 연도별 공휴일 저장
     private Map<Integer, Map<LocalDate, String>> holidaysByYear;
 
     public HolidayManager() {
         holidaysByYear = new HashMap<>();
     }
 
-    // 특정 연도의 공휴일 반환
     public Map<LocalDate, String> getHolidays(int year) {
         if (!holidaysByYear.containsKey(year)) {
             Map<LocalDate, String> holidays = new HashMap<>();
@@ -23,7 +21,6 @@ public class HolidayManager {
         return holidaysByYear.get(year);
     }
 
-    // 고정 공휴일 추가
     private void addFixedHolidays(int year, Map<LocalDate, String> holidays) {
         holidays.put(LocalDate.of(year, 1, 1), "신정");
         holidays.put(LocalDate.of(year, 3, 1), "삼일절");
@@ -35,19 +32,29 @@ public class HolidayManager {
         holidays.put(LocalDate.of(year, 12, 25), "크리스마스");
     }
 
-    // 변동 공휴일 추가 (예: 설날, 추석)
     private void addVariableHolidays(int year, Map<LocalDate, String> holidays) {
-        // 예제 데이터: 변동 공휴일 (음력을 양력으로 변환 필요)
-        holidays.put(LocalDate.of(year, 2, 10), "설날");
-        holidays.put(LocalDate.of(year, 9, 19), "추석");
+        // 음력 -> 양력 변환
+        LocalDate seollal = convertLunarToSolar(year, 1, 1); // 설날
+        LocalDate chuseok = convertLunarToSolar(year, 8, 15); // 추석
+        LocalDate buddha = convertLunarToSolar(year, 4, 8); // 부처님오신날
+
+        if (seollal != null) holidays.put(seollal, "설날");
+        if (chuseok != null) holidays.put(chuseok, "추석");
+        if (buddha != null) holidays.put(buddha, "부처님오신날");
     }
 
-    // 특정 날짜가 공휴일인지 확인
+    private LocalDate convertLunarToSolar(int year, int lunarMonth, int lunarDay) {
+        // 음력-양력 변환 예제. 실제로는 외부 라이브러리를 사용해야 함.
+        if (lunarMonth == 1 && lunarDay == 1) return LocalDate.of(year, 2, 10); // 설날 예제
+        if (lunarMonth == 8 && lunarDay == 15) return LocalDate.of(year, 9, 19); // 추석 예제
+        if (lunarMonth == 4 && lunarDay == 8) return LocalDate.of(year, 5, 27); // 부처님오신날 예제
+        return null;
+    }
+
     public boolean isHoliday(int year, LocalDate date) {
         return getHolidays(year).containsKey(date);
     }
 
-    // 특정 날짜의 공휴일 이름 가져오기
     public String getHolidayName(int year, LocalDate date) {
         return getHolidays(year).get(date);
     }
