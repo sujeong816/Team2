@@ -1,10 +1,9 @@
-/bin/
-
 # 모든 파일 무시
 *
 
-# src 폴더와 그 내부의 .java 파일 포함
+# src 폴더와 그 내부의 모든 파일 및 디렉토리 포함
 !src/
+!src/**/
 !src/**/*.java
 
 # 빌드 파일 무시
@@ -29,4 +28,3 @@ Thumbs.db
 
 # .gitignore 파일 자체는 무시하지 않음
 !.gitignore
-
