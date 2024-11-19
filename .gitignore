@@ -1,20 +1,32 @@
 /bin/
 
-# 상위 디렉터리 무시
-/../../*
+# 모든 파일 무시
+*
 
-# 무시할 파일 및 폴더
-Thumbs.db
-*.lnk
-*.ini
+# src 폴더와 그 내부의 .java 파일 포함
+!src/
+!src/**/*.java
 
-# 이클립스 및 IDE 관련 설정 무시
+# 빌드 파일 무시
+*.class
+*.jar
+
+# IDE 설정 파일 무시
 .classpath
 .project
 .settings/
+.idea/
+.vscode/
+*.iml
 
-# 프로젝트 폴더의 특정 파일만 포함
-!src/         # 소스 폴더 포함
-!*.java       # .java 파일 포함
-!.gitignore   # .gitignore 파일 포함
+# 시스템 파일 무시
+.DS_Store
+Thumbs.db
+
+# 무시할 파일 및 폴더
+*.lnk
+*.ini
+
+# .gitignore 파일 자체는 무시하지 않음
+!.gitignore
 
