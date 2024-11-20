@@ -1,198 +1,153 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.TextStyle;
-import java.util.*;
-import java.io.*;
-import java.util.List;  // java.util.List 임포트
-import java.util.Map;   // java.util.Map 임포트
-import java.util.ArrayList; // java.util.ArrayList 임포트
-import java.util.HashMap;  // java.util.HashMap 임포트
-
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import javax.swing.Timer;
 
 public class CalendarApp extends JFrame {
-    private LocalDate currentDate;
-    private JLabel monthYearLabel;
-    private JPanel calendarPanel;
-    private JTextArea scheduleTextArea;
-    private Map<LocalDate, List<String>> scheduleMap; // 날짜별 일정 리스트 저장
+
+    private JLabel dateLabel;
+    private JLabel timeLabel;
 
     public CalendarApp() {
-        currentDate = LocalDate.now();
-        scheduleMap = new HashMap<>(); // 일정 저장용 맵 초기화
-        loadSchedules();  // 프로그램 시작 시 일정 불러오기
-
-        setTitle("캘린더 애플리케이션");
-        setSize(800, 500);
+        setTitle("일정 관리 앱");
+        setSize(1000, 600);  // 창 크기를 1000x600으로 설정
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // 상단 패널: 월 이동 버튼 및 현재 월 표시
-        JPanel topPanel = new JPanel(new BorderLayout());
-        JButton prevButton = new JButton("<");
-        prevButton.addActionListener(e -> {
-            currentDate = currentDate.minusMonths(1);
-            updateCalendar();
-        });
+        // 왼쪽 패널 - 버튼을 담는 패널
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+        leftPanel.setPreferredSize(new Dimension(150, 600));
 
-        JButton nextButton = new JButton(">");
-        nextButton.addActionListener(e -> {
-            currentDate = currentDate.plusMonths(1);
-            updateCalendar();
-        });
+        // 캘린더 보기 버튼
+        JButton calendarViewButton = new JButton("캘린더 보기");
+        calendarViewButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        calendarViewButton.addActionListener(e -> JOptionPane.showMessageDialog(null, "캘린더 구현"));
 
-        monthYearLabel = new JLabel();
-        monthYearLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        topPanel.add(prevButton, BorderLayout.WEST);
-        topPanel.add(monthYearLabel, BorderLayout.CENTER);
-        topPanel.add(nextButton, BorderLayout.EAST);
+        // 일정 추가 버튼
+        JButton addScheduleButton = new JButton("일정 추가");
+        addScheduleButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        addScheduleButton.addActionListener(e -> JOptionPane.showMessageDialog(null, "일정 추가 기능 구현"));
 
-        add(topPanel, BorderLayout.NORTH);
+        // 현재 날짜와 시간을 표시하는 라벨
+        dateLabel = new JLabel();
+        dateLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        timeLabel = new JLabel();
+        timeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        updateDateTime();
 
-        // 좌측 패널: 일정 추가 버튼
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        JButton addScheduleButton = new JButton("내 캘린더 (일정 추가)");
-        addScheduleButton.addActionListener(e -> addSchedule());
-        leftPanel.add(addScheduleButton, BorderLayout.NORTH);
+        // 날짜와 시간 업데이트 타이머 (1초마다)
+        Timer timer = new Timer(1000, e -> updateDateTime());
+        timer.start();
 
+        // 왼쪽 패널에 버튼과 라벨 추가
+        leftPanel.add(Box.createVerticalStrut(20));
+        leftPanel.add(calendarViewButton);
+        leftPanel.add(Box.createVerticalStrut(10));
+        leftPanel.add(addScheduleButton);
+        leftPanel.add(Box.createVerticalStrut(20));
+        leftPanel.add(dateLabel);
+        leftPanel.add(timeLabel);
         add(leftPanel, BorderLayout.WEST);
 
-        // 중앙 패널: 달력
-        calendarPanel = new JPanel(new GridLayout(0, 7));
-        updateCalendar();
-        add(calendarPanel, BorderLayout.CENTER);
+        // 중앙 패널 - 일정 요약을 표시하는 패널
+        JPanel summaryPanel = new JPanel(new BorderLayout());
+        summaryPanel.setBorder(BorderFactory.createTitledBorder("일정 요약"));
 
-        // 우측 패널: 일정 상세보기
-        scheduleTextArea = new JTextArea();
-        scheduleTextArea.setEditable(false);
-        add(new JScrollPane(scheduleTextArea), BorderLayout.EAST);
+        // 카테고리 선택 및 완료 체크박스 패널 추가
+        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JComboBox<String> categoryComboBox = new JComboBox<>(new String[]{"전체", "카테고리1", "카테고리2"});
+        JCheckBox completeCheckBox = new JCheckBox("완료");
+
+        controlPanel.add(new JLabel("카테고리:"));
+        controlPanel.add(categoryComboBox);
+        controlPanel.add(completeCheckBox);
+        summaryPanel.add(controlPanel, BorderLayout.NORTH); // 상단에 추가
+
+        // 탭 패널 생성
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.addTab("오늘", createSchedulePanel());
+        tabbedPane.addTab("이번주", createSchedulePanel());
+        tabbedPane.addTab("이번달", createSchedulePanel());
+
+        summaryPanel.add(tabbedPane, BorderLayout.CENTER);
+        add(summaryPanel, BorderLayout.CENTER);
+
+        setVisible(true);
     }
 
-    private void updateCalendar() {
-        monthYearLabel.setText(currentDate.getYear() + "년 " + currentDate.getMonth().getDisplayName(TextStyle.FULL, Locale.KOREAN));
-        calendarPanel.removeAll();
+    // 일정 패널 생성 메서드
+    private JScrollPane createSchedulePanel() {
+        JPanel schedulePanel = new JPanel();
+        schedulePanel.setLayout(new BoxLayout(schedulePanel, BoxLayout.Y_AXIS));
 
-        // 요일 표시
-        String[] daysOfWeek = {"일", "월", "화", "수", "목", "금", "토"};
-        for (String day : daysOfWeek) {
-            JLabel dayLabel = new JLabel(day, SwingConstants.CENTER);
-            calendarPanel.add(dayLabel);
+        // 예제 일정 추가
+        for (int i = 0; i < 10; i++) { // 예제 일정 10개 추가
+            schedulePanel.add(createScheduleItem("제목 " + (i + 1), "메모 내용 " + (i + 1) + "\n추가 내용 줄바꿈 예시", 
+                                                 "2024-11-01", "2024-11-03"));
+            schedulePanel.add(Box.createVerticalStrut(10)); // 일정 간 간격
         }
+
+        // 스크롤 가능 패널로 감싸기
+        JScrollPane scrollPane = new JScrollPane(schedulePanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        return scrollPane;
+    }
+
+    // 개별 일정 패널 생성 메서드
+    private JPanel createScheduleItem(String title, String memo, String startDate, String endDate) {
+        JPanel itemPanel = new JPanel(new BorderLayout());
+        itemPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        itemPanel.setPreferredSize(new Dimension(300, 100));
+
+        // 제목과 체크박스 패널
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JCheckBox checkBox = new JCheckBox();
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 16));
+        topPanel.add(checkBox);
+        topPanel.add(titleLabel);
 
         // 날짜 표시
-        LocalDate firstDayOfMonth = currentDate.withDayOfMonth(1);
-        int dayOfWeek = firstDayOfMonth.getDayOfWeek().getValue() % 7;
+        JPanel datePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JLabel dateLabel = new JLabel("저장 날짜: " + startDate + " ~ 종료 날짜: " + endDate);
+        datePanel.add(dateLabel);
 
-        for (int i = 0; i < dayOfWeek; i++) {
-            calendarPanel.add(new JLabel()); // 빈 칸
-        }
+        // 메모 내용과 토글 버튼 패널
+        JPanel memoPanel = new JPanel(new BorderLayout());
+        JLabel memoLabel = new JLabel("<html>" + memo.replace("\n", "<br>") + "</html>");
+        JButton toggleButton = new JButton("펼치기");
+        memoLabel.setVisible(false); // 초기 상태는 접힘
+        toggleButton.addActionListener(e -> {
+            memoLabel.setVisible(!memoLabel.isVisible());
+            toggleButton.setText(memoLabel.isVisible() ? "접기" : "펼치기");
+            itemPanel.revalidate(); // 레이아웃 갱신
+            itemPanel.repaint();
+        });
 
-        int daysInMonth = currentDate.lengthOfMonth();
-        for (int day = 1; day <= daysInMonth; day++) {
-            LocalDate date = currentDate.withDayOfMonth(day); // 날짜 객체를 직접 생성
-            JButton dayButton = new JButton(String.valueOf(day));
-            dayButton.addActionListener(e -> showSchedule(date)); // 해당 날짜로 showSchedule 호출
+        memoPanel.add(memoLabel, BorderLayout.CENTER);
+        memoPanel.add(toggleButton, BorderLayout.SOUTH);
 
-            // 일정이 있는 날짜는 색상으로 표시
-            if (scheduleMap.containsKey(date)) {
-                dayButton.setBackground(Color.CYAN);
-            }
+        itemPanel.add(topPanel, BorderLayout.NORTH);
+        itemPanel.add(datePanel, BorderLayout.CENTER);
+        itemPanel.add(memoPanel, BorderLayout.SOUTH);
 
-            calendarPanel.add(dayButton);
-        }
-
-        calendarPanel.revalidate();
-        calendarPanel.repaint();
+        return itemPanel;
     }
 
-    private void addSchedule() {
-        String dateInput = JOptionPane.showInputDialog("일정 날짜 (예: 2024-04-14): ");
-        String time = JOptionPane.showInputDialog("일정 시간 (예: 오후 1시): ");
-        String title = JOptionPane.showInputDialog("일정 제목: ");
-
-        if (dateInput != null && time != null && title != null) {
-            try {
-                LocalDate date = LocalDate.parse(dateInput, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                String schedule = time + " - " + title;
-
-                // 일정 추가 또는 새로운 리스트에 추가
-                scheduleMap.computeIfAbsent(date, k -> new ArrayList<>()).add(schedule);
-                saveSchedules();  // 일정 저장
-                JOptionPane.showMessageDialog(this, "일정이 저장되었습니다.");
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "잘못된 날짜 형식입니다. (예: 2024-04-14)");
-            }
-        }
-    }
-
-    private void showSchedule(LocalDate date) {
-        scheduleTextArea.setText("날짜: " + date + "\n\n");
-        List<String> scheduleList = scheduleMap.get(date);
-        if (scheduleList != null && !scheduleList.isEmpty()) {
-            scheduleTextArea.append("일정:\n");
-            for (String schedule : scheduleList) {
-                scheduleTextArea.append("- " + schedule + "\n");
-            }
-        } else {
-            scheduleTextArea.append("일정이 없습니다.");
-        }
-    }
-
-    // 일정 데이터를 텍스트 파일로 저장
-    private void saveSchedules() {
-        try {
-            FileWriter writer = new FileWriter("schedules.txt");
-            for (Map.Entry<LocalDate, List<String>> entry : scheduleMap.entrySet()) {
-                LocalDate date = entry.getKey();
-                List<String> schedules = entry.getValue();
-                writer.write(date.toString() + "\n");
-                for (String schedule : schedules) {
-                    writer.write("  " + schedule + "\n");
-                }
-            }
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // 텍스트 파일에서 일정 데이터 불러오기
-    private void loadSchedules() {
-        try {
-            File file = new File("schedules.txt");
-            if (file.exists()) {
-                BufferedReader reader = new BufferedReader(new FileReader(file));
-                String line;
-                LocalDate currentDate = null;
-                List<String> schedules = null;
-
-                while ((line = reader.readLine()) != null) {
-                    if (line.trim().isEmpty()) continue; // 빈 줄 건너뛰기
-
-                    if (line.startsWith("20")) { // 날짜 형식 (예: 2024-04-14)
-                        if (currentDate != null && schedules != null) {
-                            scheduleMap.put(currentDate, schedules);
-                        }
-                        currentDate = LocalDate.parse(line.trim());
-                        schedules = new ArrayList<>();
-                    } else {
-                        schedules.add(line.trim());
-                    }
-                }
-                if (currentDate != null && schedules != null) {
-                    scheduleMap.put(currentDate, schedules);
-                }
-                reader.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    // 현재 날짜와 시간을 업데이트하는 메소드
+    private void updateDateTime() {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss");
+        dateLabel.setText("오늘 날짜: " + dateFormatter.format(new Date()));
+        timeLabel.setText("현재 시간: " + timeFormatter.format(new Date()));
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new CalendarApp().setVisible(true));
+        new CalendarApp();
     }
 }
