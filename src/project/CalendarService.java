@@ -12,9 +12,10 @@ public class CalendarService extends JFrame {
     private JTabbedPane tabbedPane;
     private HolidayManager holidayManager; // HolidayManager 인스턴스 추가
     private JComboBox<String> categoryComboBox; // 카테고리 콤보박스 추가
-
+    private CalendarPanel calendarPanel; // 캘린더 패널 멤버 변수로 선언
+    
     public CalendarService() {
-        setTitle("캘린더 화면");
+    	setTitle("캘린더 화면");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         Container c = getContentPane();
         c.setLayout(new BorderLayout(5, 5));
@@ -26,7 +27,7 @@ public class CalendarService extends JFrame {
         holidayManager = new HolidayManager(); // 공휴일 관리자를 초기화
 
         // 중앙에 캘린더 패널 추가
-        CalendarPanel calendarPanel = new CalendarPanel();
+        calendarPanel = new CalendarPanel(); // 캘린더 패널 생성 및 초기화
         c.add(calendarPanel, BorderLayout.CENTER);
 
         // 서쪽 패널 생성 및 구성
@@ -38,10 +39,10 @@ public class CalendarService extends JFrame {
         categoryPanel.setLayout(new BoxLayout(categoryPanel, BoxLayout.Y_AXIS)); // 수직
         categoryPanel.setBorder(BorderFactory.createTitledBorder("카테고리"));
         categoryComboBox = new JComboBox<>(); // 카테고리 콤보박스 생성
-        updateCategoryComboBox(categoryComboBox); // 저장된 카테고리 추가
+        updateCategoryComboBox(); // 저장된 카테고리 추가
         categoryPanel.add(categoryComboBox);
 
-     // 일정 탭 패널 생성
+        // 일정 탭 패널 생성
         tabbedPane = new JTabbedPane();
 
         // 첫 번째 탭: 이번 달 일정
@@ -54,40 +55,19 @@ public class CalendarService extends JFrame {
         // 새로고침 버튼
         JButton refreshButton = new JButton("새로고침");
         refreshButton.addActionListener(e -> {
-            // 카테고리와 이번달 일정 새로고침
-            updateCategoryComboBox(categoryComboBox);
+            updateCategoryComboBox();
             calendarPanel.updateDatesWithCategory((String) categoryComboBox.getSelectedItem());
             updateMonthSchedulePanel(monthSchedulePanel);
         });
 
-        // 새로고침 버튼 아래 추가를 위해 서쪽 패널 수정
-        JPanel westPanelContent = new JPanel();
-        westPanelContent.setLayout(new BorderLayout());
-        westPanelContent.add(tabbedPane, BorderLayout.CENTER); // 탭을 가운데에 추가
-        westPanelContent.add(refreshButton, BorderLayout.SOUTH); // 버튼을 아래에 추가
+        JPanel westPanelContent = new JPanel(new BorderLayout());
+        westPanelContent.add(tabbedPane, BorderLayout.CENTER);
+        westPanelContent.add(refreshButton, BorderLayout.SOUTH);
 
-        // 카테고리 패널을 NORTH에 추가하고 서쪽 패널에 추가
         westPanel.add(categoryPanel, BorderLayout.NORTH);
         westPanel.add(westPanelContent, BorderLayout.CENTER);
 
-        // 서쪽 패널 전체를 컨테이너에 추가
         c.add(westPanel, BorderLayout.WEST);
-
-     // CalendarService 클래스의 생성자에 추가
-//        JButton resetButton = new JButton("초기화");
-//        resetButton.addActionListener(e -> {
-//            int confirm = JOptionPane.showConfirmDialog(this, "모든 데이터를 초기화하시겠습니까?", "초기화 확인", JOptionPane.YES_NO_OPTION);
-//            if (confirm == JOptionPane.YES_OPTION) {
-//                FileManager.resetData(); // 초기화 메서드 호출
-//                updateScheduleTab(); // UI 갱신
-//                JOptionPane.showMessageDialog(this, "모든 데이터가 초기화되었습니다.", "초기화 완료", JOptionPane.INFORMATION_MESSAGE);
-//            }
-//        });
-//
-//        // 서쪽 패널에 버튼 추가 (예: 카테고리 패널 아래)
-//        categoryPanel.add(Box.createVerticalStrut(10)); // 간격 추가
-//        categoryPanel.add(resetButton);
-
 
         setSize(1000, 600); // 창 크기 고정
         setVisible(true);
@@ -152,17 +132,37 @@ public class CalendarService extends JFrame {
     }
 
     // 카테고리 콤보박스 업데이트 메서드
-    private void updateCategoryComboBox(JComboBox<String> categoryComboBox) {
+    private void updateCategoryComboBox() {
         categoryComboBox.removeAllItems(); // 기존 아이템 제거
 
-        // 저장된 카테고리를 추가
-        for (FileManager.Category category : FileManager.categories) {
-            categoryComboBox.addItem(category.getName());
+        // 일정 데이터를 순회하여 사용된 카테고리를 추출
+        Set<String> uniqueCategoryNames = new HashSet<>();
+        for (FileManager.Schedule schedule : FileManager.schedules) {
+            if (schedule.getCategory() != null) {
+                uniqueCategoryNames.add(schedule.getCategory().getName());
+            }
         }
+
+        // 추출한 카테고리 이름을 콤보박스에 추가
+        for (String categoryName : uniqueCategoryNames) {
+            categoryComboBox.addItem(categoryName);
+        }
+
+        // 카테고리 선택 시 동작 추가
+        categoryComboBox.addActionListener(e -> {
+            String selectedCategory = (String) categoryComboBox.getSelectedItem();
+            System.out.println("Selected Category: " + selectedCategory); // 디버깅용
+            calendarPanel.updateDatesWithCategory(selectedCategory); // 선택된 카테고리로 캘린더 업데이트
+        });
 
         categoryComboBox.revalidate();
         categoryComboBox.repaint();
     }
+
+
+
+
+
 
     // 캘린더 패널 클래스
     class CalendarPanel extends JPanel {
@@ -298,46 +298,52 @@ public class CalendarService extends JFrame {
         }
         
         public void updateDatesWithCategory(String categoryName) {
+            System.out.println("Updating dates for category: " + categoryName); // 디버깅 로그
+
             for (Component comp : datePanel.getComponents()) {
                 if (comp instanceof JButton button) {
                     try {
-                        String buttonText = button.getText().replaceAll("<.*?>", ""); // Remove HTML tags
-                        int day = Integer.parseInt(buttonText);
+                        // 버튼 텍스트에서 날짜 추출
+                        String buttonText = button.getText().replaceAll("<[^>]*>", ""); // HTML 태그 제거
+                        int day = Integer.parseInt(buttonText.trim());
                         LocalDate buttonDate = LocalDate.of(year, month + 1, day);
 
-                        // 초기화
+                        // 버튼 초기화
                         button.setBackground(Color.WHITE);
 
+                        // 선택된 카테고리가 있을 경우
                         if (categoryName != null) {
-                            FileManager.Category selectedCategory = FileManager.categories.stream()
-                                    .filter(category -> category.getName().equals(categoryName))
-                                    .findFirst()
-                                    .orElse(null);
-
-                            if (selectedCategory != null) {
-                                // 일정 필터링
-                                boolean hasScheduleInCategory = FileManager.schedules.stream()
-                                        .anyMatch(schedule -> !schedule.getStartDate().toLocalDate().isAfter(buttonDate) &&
-                                                !schedule.getEndDate().toLocalDate().isBefore(buttonDate) &&
-                                                schedule.getCategory() != null &&
-                                                schedule.getCategory().equals(selectedCategory));
-
-                                if (hasScheduleInCategory) {
-                                    button.setBackground(selectedCategory.getColor());
+                            // 일정 데이터에서 필터링
+                            for (FileManager.Schedule schedule : FileManager.schedules) {
+                                if (schedule.getCategory() != null &&
+                                        schedule.getCategory().getName().equals(categoryName) &&
+                                        !schedule.getStartDate().toLocalDate().isAfter(buttonDate) &&
+                                        !schedule.getEndDate().toLocalDate().isBefore(buttonDate)) {
+                                    // 해당 일정의 카테고리 색상으로 버튼 배경 설정
+                                    button.setBackground(schedule.getCategory().getColor());
+                                    System.out.println("Updated button for date: " + buttonDate +
+                                            " with color: " + schedule.getCategory().getColor());
+                                    break;
                                 }
                             }
                         }
                     } catch (NumberFormatException ignored) {
-                        // 날짜가 아닌 버튼은 무시
+                        // 날짜가 아닌 버튼(예: 요일)은 무시
                     }
                 }
             }
-            datePanel.repaint();
+
+            datePanel.repaint(); // 화면 갱신
         }
+
+
+
 
     }
 
     public static void main(String[] args) {
         new CalendarService();
+
+
     }
 }
