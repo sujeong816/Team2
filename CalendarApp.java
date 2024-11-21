@@ -1,3 +1,5 @@
+package project1;
+
 import javax.swing.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
@@ -10,39 +12,39 @@ public class CalendarApp extends JFrame {
     private JLabel timeLabel;
 
     public CalendarApp() {
-        setTitle("ÀÏÁ¤ °ü¸® ¾Û");
-        setSize(1000, 600);  // Ã¢ Å©±â¸¦ 1000x600À¸·Î ¼³Á¤
+        setTitle("ì¼ì • ê´€ë¦¬ ì•±");
+        setSize(1000, 600);  // ì°½ í¬ê¸°ë¥¼ 1000x600ìœ¼ë¡œ ì„¤ì •
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // ¿ŞÂÊ ÆĞ³Î - ¹öÆ°À» ´ã´Â ÆĞ³Î
+        // ì™¼ìª½ íŒ¨ë„ - ë²„íŠ¼ì„ ë‹´ëŠ” íŒ¨ë„
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setPreferredSize(new Dimension(150, 600));
 
-        // Ä¶¸°´õ º¸±â ¹öÆ°
-        JButton calendarViewButton = new JButton("Ä¶¸°´õ º¸±â");
+        // ìº˜ë¦°ë” ë³´ê¸° ë²„íŠ¼
+        JButton calendarViewButton = new JButton("ìº˜ë¦°ë” ë³´ê¸°");
         calendarViewButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        calendarViewButton.addActionListener(e -> JOptionPane.showMessageDialog(null, "Ä¶¸°´õ ±¸Çö"));
+        calendarViewButton.addActionListener(e -> JOptionPane.showMessageDialog(null, "ìº˜ë¦°ë” êµ¬í˜„"));
 
-        // ÀÏÁ¤ Ãß°¡ ¹öÆ°
-        JButton addScheduleButton = new JButton("ÀÏÁ¤ Ãß°¡");
+        // ì¼ì • ì¶”ê°€ ë²„íŠ¼
+        JButton addScheduleButton = new JButton("ì¼ì • ì¶”ê°€");
         addScheduleButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        addScheduleButton.addActionListener(e -> JOptionPane.showMessageDialog(null, "ÀÏÁ¤ Ãß°¡ ±â´É ±¸Çö"));
+        addScheduleButton.addActionListener(e -> JOptionPane.showMessageDialog(null, "ì¼ì • ì¶”ê°€ ê¸°ëŠ¥ êµ¬í˜„"));
 
-        // ÇöÀç ³¯Â¥¿Í ½Ã°£À» Ç¥½ÃÇÏ´Â ¶óº§
+        // í˜„ì¬ ë‚ ì§œì™€ ì‹œê°„ì„ í‘œì‹œí•˜ëŠ” ë¼ë²¨
         dateLabel = new JLabel();
         dateLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         timeLabel = new JLabel();
         timeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         updateDateTime();
 
-        // ³¯Â¥¿Í ½Ã°£ ¾÷µ¥ÀÌÆ® Å¸ÀÌ¸Ó (1ÃÊ¸¶´Ù)
+        // ë‚ ì§œì™€ ì‹œê°„ ì—…ë°ì´íŠ¸ íƒ€ì´ë¨¸ (1ì´ˆë§ˆë‹¤)
         Timer timer = new Timer(1000, e -> updateDateTime());
         timer.start();
 
-        // ¿ŞÂÊ ÆĞ³Î¿¡ ¹öÆ°°ú ¶óº§ Ãß°¡
+        // ì™¼ìª½ íŒ¨ë„ì— ë²„íŠ¼ê³¼ ë¼ë²¨ ì¶”ê°€
         leftPanel.add(Box.createVerticalStrut(20));
         leftPanel.add(calendarViewButton);
         leftPanel.add(Box.createVerticalStrut(10));
@@ -52,25 +54,25 @@ public class CalendarApp extends JFrame {
         leftPanel.add(timeLabel);
         add(leftPanel, BorderLayout.WEST);
 
-        // Áß¾Ó ÆĞ³Î - ÀÏÁ¤ ¿ä¾àÀ» Ç¥½ÃÇÏ´Â ÆĞ³Î
+        // ì¤‘ì•™ íŒ¨ë„ - ì¼ì • ìš”ì•½ì„ í‘œì‹œí•˜ëŠ” íŒ¨ë„
         JPanel summaryPanel = new JPanel(new BorderLayout());
-        summaryPanel.setBorder(BorderFactory.createTitledBorder("ÀÏÁ¤ ¿ä¾à"));
+        summaryPanel.setBorder(BorderFactory.createTitledBorder("ì¼ì • ìš”ì•½"));
 
-        // Ä«Å×°í¸® ¼±ÅÃ ¹× ¿Ï·á Ã¼Å©¹Ú½º ÆĞ³Î Ãß°¡
+        // ì¹´í…Œê³ ë¦¬ ì„ íƒ ë° ì™„ë£Œ ì²´í¬ë°•ìŠ¤ íŒ¨ë„ ì¶”ê°€
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JComboBox<String> categoryComboBox = new JComboBox<>(new String[]{"ÀüÃ¼", "Ä«Å×°í¸®1", "Ä«Å×°í¸®2"});
-        JCheckBox completeCheckBox = new JCheckBox("¿Ï·á");
+        JComboBox<String> categoryComboBox = new JComboBox<>(new String[]{"ì „ì²´", "ì¹´í…Œê³ ë¦¬1", "ì¹´í…Œê³ ë¦¬2"});
+        JCheckBox completeCheckBox = new JCheckBox("ì™„ë£Œ");
 
-        controlPanel.add(new JLabel("Ä«Å×°í¸®:"));
+        controlPanel.add(new JLabel("ì¹´í…Œê³ ë¦¬:"));
         controlPanel.add(categoryComboBox);
         controlPanel.add(completeCheckBox);
-        summaryPanel.add(controlPanel, BorderLayout.NORTH); // »ó´Ü¿¡ Ãß°¡
+        summaryPanel.add(controlPanel, BorderLayout.NORTH); // ìƒë‹¨ì— ì¶”ê°€
 
-        // ÅÇ ÆĞ³Î »ı¼º
+        // íƒ­ íŒ¨ë„ ìƒì„±
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("¿À´Ã", createSchedulePanel());
-        tabbedPane.addTab("ÀÌ¹øÁÖ", createSchedulePanel());
-        tabbedPane.addTab("ÀÌ¹ø´Ş", createSchedulePanel());
+        tabbedPane.addTab("ì˜¤ëŠ˜", createSchedulePanel());
+        tabbedPane.addTab("ì´ë²ˆì£¼", createSchedulePanel());
+        tabbedPane.addTab("ì´ë²ˆë‹¬", createSchedulePanel());
 
         summaryPanel.add(tabbedPane, BorderLayout.CENTER);
         add(summaryPanel, BorderLayout.CENTER);
@@ -78,19 +80,19 @@ public class CalendarApp extends JFrame {
         setVisible(true);
     }
 
-    // ÀÏÁ¤ ÆĞ³Î »ı¼º ¸Ş¼­µå
+    // ì¼ì • íŒ¨ë„ ìƒì„± ë©”ì„œë“œ
     private JScrollPane createSchedulePanel() {
         JPanel schedulePanel = new JPanel();
         schedulePanel.setLayout(new BoxLayout(schedulePanel, BoxLayout.Y_AXIS));
 
-        // ¿¹Á¦ ÀÏÁ¤ Ãß°¡
-        for (int i = 0; i < 10; i++) { // ¿¹Á¦ ÀÏÁ¤ 10°³ Ãß°¡
-            schedulePanel.add(createScheduleItem("Á¦¸ñ " + (i + 1), "¸Ş¸ğ ³»¿ë " + (i + 1) + "\nÃß°¡ ³»¿ë ÁÙ¹Ù²Ş ¿¹½Ã", 
+        // ì˜ˆì œ ì¼ì • ì¶”ê°€
+        for (int i = 0; i < 10; i++) { // ì˜ˆì œ ì¼ì • 10ê°œ ì¶”ê°€
+            schedulePanel.add(createScheduleItem("ì œëª© " + (i + 1), "ë©”ëª¨ ë‚´ìš© " + (i + 1) + "\nì¶”ê°€ ë‚´ìš© ì¤„ë°”ê¿ˆ ì˜ˆì‹œ", 
                                                  "2024-11-01", "2024-11-03"));
-            schedulePanel.add(Box.createVerticalStrut(10)); // ÀÏÁ¤ °£ °£°İ
+            schedulePanel.add(Box.createVerticalStrut(10)); // ì¼ì • ê°„ ê°„ê²©
         }
 
-        // ½ºÅ©·Ñ °¡´É ÆĞ³Î·Î °¨½Î±â
+        // ìŠ¤í¬ë¡¤ ê°€ëŠ¥ íŒ¨ë„ë¡œ ê°ì‹¸ê¸°
         JScrollPane scrollPane = new JScrollPane(schedulePanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -98,13 +100,13 @@ public class CalendarApp extends JFrame {
         return scrollPane;
     }
 
-    // °³º° ÀÏÁ¤ ÆĞ³Î »ı¼º ¸Ş¼­µå
+    // ê°œë³„ ì¼ì • íŒ¨ë„ ìƒì„± ë©”ì„œë“œ
     private JPanel createScheduleItem(String title, String memo, String startDate, String endDate) {
         JPanel itemPanel = new JPanel(new BorderLayout());
         itemPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         itemPanel.setPreferredSize(new Dimension(300, 100));
 
-        // Á¦¸ñ°ú Ã¼Å©¹Ú½º ÆĞ³Î
+        // ì œëª©ê³¼ ì²´í¬ë°•ìŠ¤ íŒ¨ë„
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JCheckBox checkBox = new JCheckBox();
         JLabel titleLabel = new JLabel(title);
@@ -112,20 +114,20 @@ public class CalendarApp extends JFrame {
         topPanel.add(checkBox);
         topPanel.add(titleLabel);
 
-        // ³¯Â¥ Ç¥½Ã
+        // ë‚ ì§œ í‘œì‹œ
         JPanel datePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JLabel dateLabel = new JLabel("ÀúÀå ³¯Â¥: " + startDate + " ~ Á¾·á ³¯Â¥: " + endDate);
+        JLabel dateLabel = new JLabel("ì €ì¥ ë‚ ì§œ: " + startDate + " ~ ì¢…ë£Œ ë‚ ì§œ: " + endDate);
         datePanel.add(dateLabel);
 
-        // ¸Ş¸ğ ³»¿ë°ú Åä±Û ¹öÆ° ÆĞ³Î
+        // ë©”ëª¨ ë‚´ìš©ê³¼ í† ê¸€ ë²„íŠ¼ íŒ¨ë„
         JPanel memoPanel = new JPanel(new BorderLayout());
         JLabel memoLabel = new JLabel("<html>" + memo.replace("\n", "<br>") + "</html>");
-        JButton toggleButton = new JButton("ÆîÄ¡±â");
-        memoLabel.setVisible(false); // ÃÊ±â »óÅÂ´Â Á¢Èû
+        JButton toggleButton = new JButton("í¼ì¹˜ê¸°");
+        memoLabel.setVisible(false); // ì´ˆê¸° ìƒíƒœëŠ” ì ‘í˜
         toggleButton.addActionListener(e -> {
             memoLabel.setVisible(!memoLabel.isVisible());
-            toggleButton.setText(memoLabel.isVisible() ? "Á¢±â" : "ÆîÄ¡±â");
-            itemPanel.revalidate(); // ·¹ÀÌ¾Æ¿ô °»½Å
+            toggleButton.setText(memoLabel.isVisible() ? "ì ‘ê¸°" : "í¼ì¹˜ê¸°");
+            itemPanel.revalidate(); // ë ˆì´ì•„ì›ƒ ê°±ì‹ 
             itemPanel.repaint();
         });
 
@@ -139,12 +141,12 @@ public class CalendarApp extends JFrame {
         return itemPanel;
     }
 
-    // ÇöÀç ³¯Â¥¿Í ½Ã°£À» ¾÷µ¥ÀÌÆ®ÇÏ´Â ¸Ş¼Òµå
+    // í˜„ì¬ ë‚ ì§œì™€ ì‹œê°„ì„ ì—…ë°ì´íŠ¸í•˜ëŠ” ë©”ì†Œë“œ
     private void updateDateTime() {
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
         SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss");
-        dateLabel.setText("¿À´Ã ³¯Â¥: " + dateFormatter.format(new Date()));
-        timeLabel.setText("ÇöÀç ½Ã°£: " + timeFormatter.format(new Date()));
+        dateLabel.setText("ì˜¤ëŠ˜ ë‚ ì§œ: " + dateFormatter.format(new Date()));
+        timeLabel.setText("í˜„ì¬ ì‹œê°„: " + timeFormatter.format(new Date()));
     }
 
     public static void main(String[] args) {

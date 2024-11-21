@@ -1,4 +1,4 @@
-package Project;
+package project1;
 
 import java.awt.Color;
 import java.io.*;
@@ -14,7 +14,8 @@ public class FileManager {
     public static List<Schedule> schedules = new ArrayList<>();
 
     // Category 클래스
-    public static class Category {
+    public static class Category implements Serializable{
+    	private static final long serialVersionUID = 1L; // 수정: 직렬화 버전 ID
         private String name;
         private Color color;
 
@@ -40,7 +41,8 @@ public class FileManager {
     }
 
     // Schedule 클래스
-    public static class Schedule {
+    public static class Schedule implements Serializable{
+    	private static final long serialVersionUID = 1L; //수정: 직렬화 버전 ID
         private Category category;
         private String title, content;
         private LocalDateTime startDate, endDate;
@@ -129,8 +131,13 @@ public class FileManager {
 
     // 카테고리 추가 함수
     public static void addCategory(Category category) {
-        categories.add(category);
-        saveCategory(); // 수정: 추가된 카테고리를 저장
+        // 수정: 중복된 카테고리 방지
+        boolean exists = categories.stream()
+            .anyMatch(existing -> existing.getName().equals(category.getName()));
+        if (!exists) {
+            categories.add(category);
+            saveCategory(); // 수정: 추가된 카테고리를 저장
+        }
     }
 
     // 일정 추가 함수
@@ -138,4 +145,18 @@ public class FileManager {
         schedules.add(schedule);
         saveSchedule(); // 수정: 추가된 일정을 저장
     }
+    
+    //수정: 초기화 함수
+    public static void resetData() {
+        // 리스트 초기화
+        categories.clear();
+        schedules.clear();
+
+        // 저장된 파일 삭제 또는 빈 데이터로 저장
+        saveCategory(); // 빈 카테고리 저장
+        saveSchedule(); // 빈 일정 저장
+
+        System.out.println("모든 데이터가 초기화되었습니다.");
+    }
+
 }

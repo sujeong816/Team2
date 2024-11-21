@@ -1,4 +1,4 @@
-package Project;
+package project1;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -160,6 +160,13 @@ public class AddPlan extends JFrame {
                 JOptionPane.showMessageDialog(this, "시작 시간이 종료 시간보다 빠를 수 없습니다.", "시간 오류", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            
+            // 선택된 카테고리가 없는 경우 검증
+            // 수정 이유: NullPointerException 방지 및 사용자 경험 개선
+            if (selectedCategory == null) {
+                JOptionPane.showMessageDialog(this, "카테고리를 선택하세요.", "카테고리 오류", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
             FileManager.Schedule newSchedule = new FileManager.Schedule(
                     selectedCategory, titleField.getText(), memoField.getText(), startDateTime, endDateTime);
@@ -171,6 +178,7 @@ public class AddPlan extends JFrame {
             } else {
                 scheduleListModel.addElement(newSchedule);
                 FileManager.addSchedule(newSchedule);
+                
             }
             FileManager.SaveAllData();
         });
