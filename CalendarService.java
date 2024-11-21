@@ -1,4 +1,4 @@
-package project1;
+package Project;
 
 import java.awt.*;
 import java.time.LocalDate;
@@ -280,7 +280,10 @@ public class CalendarService extends JFrame {
                     dayButton.setBorder(BorderFactory.createLineBorder(Color.GREEN, 2));
                 }
 
-                dayButton.addActionListener(e -> SwingUtilities.invokeLater(AddPlan::new));
+                dayButton.addActionListener(e ->  { 
+                	LocalDate selectedDate = LocalDate.of(year, month + 1, currentDay);
+                	SwingUtilities.invokeLater(() -> new AddPlan(selectedDate));
+                }); // AddPlan으로 선택한 날짜 보냄
                 datePanel.add(dayButton);
                 cal.add(Calendar.DAY_OF_MONTH, 1);
             }
