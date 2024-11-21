@@ -18,14 +18,18 @@ public class AddPlan extends JFrame {
     private JSpinner endDateTimeSpinner;
     private JButton categoryButton;
     private JButton addButton;
+    private JButton editButton;
+    private JButton deleteButton;
     private FileManager.Category selectedCategory;
+    private boolean isEditMode = false;
+    private int editIndex = -1;
 
     public AddPlan() {
         this(LocalDate.now());
     }
 
     public AddPlan(LocalDate selectedDate) {
-        setTitle("일정 추가");
+        setTitle("일정 관리");
         setSize(900, 600);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -52,6 +56,35 @@ public class AddPlan extends JFrame {
         scheduleList.setCellRenderer(new ScheduleRenderer());
         JScrollPane scrollPane = new JScrollPane(scheduleList);
         leftPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Buttons: Edit and Delete
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.WHITE);
+
+        editButton = createStyledButton("수정하기");
+        deleteButton = createStyledButton("삭제하기");
+
+        editButton.addActionListener(e -> {
+            int selectedIndex = scheduleList.getSelectedIndex();
+            if (selectedIndex != -1) {
+                FileManager.Schedule selectedSchedule = scheduleListModel.getElementAt(selectedIndex);
+                enterEditMode(selectedSchedule, selectedIndex);
+            }
+        });
+
+        deleteButton.addActionListener(e -> {
+            int selectedIndex = scheduleList.getSelectedIndex();
+            if (selectedIndex != -1) {
+                FileManager.Schedule schedule = scheduleListModel.getElementAt(selectedIndex);
+                scheduleListModel.remove(selectedIndex);
+                FileManager.schedules.remove(schedule);
+                FileManager.SaveAllData();
+            }
+        });
+
+        buttonPanel.add(editButton);
+        buttonPanel.add(deleteButton);
+        leftPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         mainPanel.add(leftPanel);
 
@@ -124,7 +157,7 @@ public class AddPlan extends JFrame {
         memoPanel.add(memoScrollPane);
         rightPanel.add(memoPanel);
 
-        // Add/Update button
+        // Add button
         addButton = createStyledButton("추가하기");
         addButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         addButton.addActionListener(e -> {
@@ -144,8 +177,15 @@ public class AddPlan extends JFrame {
             FileManager.Schedule newSchedule = new FileManager.Schedule(
                     selectedCategory, titleField.getText(), memoField.getText(), startDateTime, endDateTime);
 
-            scheduleListModel.addElement(newSchedule);
-            FileManager.addSchedule(newSchedule);
+            if (isEditMode) {
+                scheduleListModel.set(editIndex, newSchedule);
+                FileManager.schedules.set(editIndex, newSchedule);
+                exitEditMode();
+            } else {
+                scheduleListModel.addElement(newSchedule);
+                FileManager.addSchedule(newSchedule);
+            }
+
             FileManager.SaveAllData();
         });
 
@@ -181,6 +221,31 @@ public class AddPlan extends JFrame {
         textField.setBackground(new Color(230, 230, 230));
         textField.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         return textField;
+    }
+
+    private void enterEditMode(FileManager.Schedule schedule, int index) {
+        titleField.setText(schedule.getTitle());
+        memoField.setText(schedule.getContent());
+        startDateTimeSpinner.setValue(Date.from(schedule.getStartDate().atZone(ZoneId.systemDefault()).toInstant()));
+        endDateTimeSpinner.setValue(Date.from(schedule.getEndDate().atZone(ZoneId.systemDefault()).toInstant()));
+        selectedCategory = schedule.getCategory();
+        categoryButton.setText("카테고리: " + selectedCategory.getName());
+        categoryButton.setBackground(selectedCategory.getColor());
+        isEditMode = true;
+        editIndex = index;
+        addButton.setText("수정하기");
+    }
+
+    private void exitEditMode() {
+        titleField.setText("");
+        memoField.setText("");
+        startDateTimeSpinner.setValue(new Date());
+        endDateTimeSpinner.setValue(new Date());
+        categoryButton.setText("카테고리 선택");
+        categoryButton.setBackground(null);
+        selectedCategory = null;
+        isEditMode = false;
+        addButton.setText("추가하기");
     }
 
     private static class ScheduleRenderer extends DefaultListCellRenderer {
