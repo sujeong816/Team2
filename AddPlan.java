@@ -1,9 +1,9 @@
-package project1;
+package Project;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.basic.BasicButtonUI;
 import java.awt.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -18,15 +18,16 @@ public class AddPlan extends JFrame {
     private JSpinner endDateTimeSpinner;
     private JButton categoryButton;
     private JButton addButton;
-    private JButton editButton;
-    private boolean isEditMode = false;
-    private int editIndex = -1;
     private FileManager.Category selectedCategory;
 
     public AddPlan() {
-        setTitle("일정 관리");
+        this(LocalDate.now());
+    }
+
+    public AddPlan(LocalDate selectedDate) {
+        setTitle("일정 추가");
         setSize(900, 600);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE); // 창 닫아도 부모 창이 꺼지지 않음
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         FileManager.LoadSaveData();
@@ -52,36 +53,6 @@ public class AddPlan extends JFrame {
         JScrollPane scrollPane = new JScrollPane(scheduleList);
         leftPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Buttons: Edit and Delete
-        JPanel buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.setBackground(Color.WHITE);
-
-        editButton = createStyledButton("수정하기");
-        JButton deleteButton = createStyledButton("삭제하기");
-
-        editButton.addActionListener(e -> {
-            int selectedIndex = scheduleList.getSelectedIndex();
-            if (selectedIndex != -1) {
-                FileManager.Schedule selectedSchedule = scheduleListModel.getElementAt(selectedIndex);
-                enterEditMode(selectedSchedule, selectedIndex);
-            }
-        });
-
-        deleteButton.addActionListener(e -> {
-            int selectedIndex = scheduleList.getSelectedIndex();
-            if (selectedIndex != -1) {
-                FileManager.Schedule schedule = scheduleListModel.getElementAt(selectedIndex);
-                FileManager.schedules.remove(schedule);
-                FileManager.SaveAllData();
-                scheduleListModel.remove(selectedIndex);
-            }
-        });
-
-        buttonPanel.add(editButton);
-        buttonPanel.add(deleteButton);
-        leftPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-        // Add left panel to main
         mainPanel.add(leftPanel);
 
         // Right panel: Add/Edit schedule
@@ -117,6 +88,10 @@ public class AddPlan extends JFrame {
         JLabel endDateTimeLabel = new JLabel("종료일시:");
         endDateTimeSpinner = new JSpinner(new SpinnerDateModel());
         endDateTimeSpinner.setEditor(new JSpinner.DateEditor(endDateTimeSpinner, "yyyy-MM-dd HH:mm"));
+
+        Date defaultDate = Date.from(selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        startDateTimeSpinner.setValue(defaultDate);
+        endDateTimeSpinner.setValue(defaultDate);
 
         datePanel.add(startDateTimeLabel);
         datePanel.add(startDateTimeSpinner);
@@ -160,9 +135,7 @@ public class AddPlan extends JFrame {
                 JOptionPane.showMessageDialog(this, "시작 시간이 종료 시간보다 빠를 수 없습니다.", "시간 오류", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
-            // 선택된 카테고리가 없는 경우 검증
-            // 수정 이유: NullPointerException 방지 및 사용자 경험 개선
+
             if (selectedCategory == null) {
                 JOptionPane.showMessageDialog(this, "카테고리를 선택하세요.", "카테고리 오류", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -171,24 +144,15 @@ public class AddPlan extends JFrame {
             FileManager.Schedule newSchedule = new FileManager.Schedule(
                     selectedCategory, titleField.getText(), memoField.getText(), startDateTime, endDateTime);
 
-            if (isEditMode) {
-                scheduleListModel.set(editIndex, newSchedule);
-                FileManager.schedules.set(editIndex, newSchedule);
-                exitEditMode();
-            } else {
-                scheduleListModel.addElement(newSchedule);
-                FileManager.addSchedule(newSchedule);
-                
-            }
+            scheduleListModel.addElement(newSchedule);
+            FileManager.addSchedule(newSchedule);
             FileManager.SaveAllData();
         });
 
         rightPanel.add(Box.createVerticalStrut(10));
         rightPanel.add(addButton);
 
-        // Add right panel to main
         mainPanel.add(rightPanel);
-
         add(mainPanel);
 
         setVisible(true);
@@ -217,35 +181,6 @@ public class AddPlan extends JFrame {
         textField.setBackground(new Color(230, 230, 230));
         textField.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         return textField;
-    }
-
-    private void resetFields() {
-        titleField.setText("");
-        memoField.setText("");
-        startDateTimeSpinner.setValue(new Date());
-        endDateTimeSpinner.setValue(new Date());
-        categoryButton.setText("카테고리 선택");
-        categoryButton.setBackground(null);
-        selectedCategory = null;
-        isEditMode = false;
-        addButton.setText("추가하기");
-    }
-
-    private void enterEditMode(FileManager.Schedule schedule, int index) {
-        titleField.setText(schedule.getTitle());
-        memoField.setText(schedule.getContent());
-        startDateTimeSpinner.setValue(Date.from(schedule.getStartDate().atZone(ZoneId.systemDefault()).toInstant()));
-        endDateTimeSpinner.setValue(Date.from(schedule.getEndDate().atZone(ZoneId.systemDefault()).toInstant()));
-        selectedCategory = schedule.getCategory();
-        categoryButton.setText("카테고리: " + selectedCategory.getName());
-        categoryButton.setBackground(selectedCategory.getColor());
-        isEditMode = true;
-        editIndex = index;
-        addButton.setText("수정하기");
-    }
-
-    private void exitEditMode() {
-        resetFields();
     }
 
     private static class ScheduleRenderer extends DefaultListCellRenderer {
@@ -283,9 +218,5 @@ public class AddPlan extends JFrame {
         public int getIconHeight() {
             return 10;
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(AddPlan::new);
     }
 }
