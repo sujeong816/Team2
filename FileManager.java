@@ -46,6 +46,7 @@ public class FileManager {
         private Category category;
         private String title, content;
         private LocalDateTime startDate, endDate;
+        private boolean isDone;
 
         public Schedule() {}
 
@@ -55,6 +56,7 @@ public class FileManager {
             this.content = content;
             this.startDate = startDate;
             this.endDate = endDate;
+            this.isDone = false;
         }
 
         public Category getCategory() {
@@ -65,16 +67,41 @@ public class FileManager {
             return title;
         }
 
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
         public String getContent() {
             return content;
+        }
+
+        public void setContent(String content) {
+            this.content = content;
         }
 
         public LocalDateTime getStartDate() {
             return startDate;
         }
 
+        public void setStartDate(LocalDateTime startDate) {
+            this.startDate = startDate;
+        }
+
         public LocalDateTime getEndDate() {
             return endDate;
+        }
+
+        public void setEndDate(LocalDateTime endDate) {
+            this.endDate = endDate;
+        }
+
+        public boolean getIsDone() {
+            return isDone;
+        }
+
+        public void setIsDone(boolean isDone) {
+            this.isDone = false;
+
         }
     }
 
@@ -159,4 +186,46 @@ public class FileManager {
         System.out.println("모든 데이터가 초기화되었습니다.");
     }
 
+    // Schedule 검색 함수
+	public static List<Schedule> getScheduleToday(LocalDate date)
+	{
+		List<Schedule> searched = new ArrayList<>();
+		for(Schedule schedule : schedules)
+		{
+			if(schedule.endDate.toLocalDate().isBefore(date) || schedule.startDate.toLocalDate().isAfter(date))
+				continue;
+			
+			searched.add(schedule);
+		}
+		return searched;
+	}
+	
+	// Schedule 검색 함수 (이번 주)
+	public static List<Schedule> getScheduleWeek(LocalDate date)
+	{
+		List<Schedule> searched = new ArrayList<>();
+		int days = 6 - date.getDayOfWeek().ordinal();
+		for(Schedule schedule : schedules)
+		{
+			if(schedule.endDate.toLocalDate().isBefore(date) || schedule.startDate.toLocalDate().isAfter(date.plusDays(days)))
+				continue;
+			
+			searched.add(schedule);
+		}
+		return searched;
+	}
+	
+	// Schedule 검색 함수 (이번 달)
+	public static List<Schedule> getScheduleMonth(LocalDate date)
+	{
+		List<Schedule> searched = new ArrayList<>();
+		for(Schedule schedule : schedules)
+		{
+			if (schedule.endDate.getYear() < date.getYear() || schedule.endDate.getMonthValue() < date.getMonthValue() || schedule.startDate.getYear() > date.getYear() || schedule.startDate.getMonthValue() > date.getMonthValue())
+				continue;
+			
+			searched.add(schedule);
+		}
+		return searched;
+	}
 }
