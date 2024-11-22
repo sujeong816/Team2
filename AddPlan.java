@@ -49,7 +49,13 @@ public class AddPlan extends JFrame {
         leftPanel.add(scheduleListLabel, BorderLayout.NORTH);
 
         scheduleListModel = new DefaultListModel<>();
-        FileManager.schedules.forEach(scheduleListModel::addElement);
+        // 오늘 날짜와 일치하는 일정만 추가
+        FileManager.schedules.stream()
+                .filter(schedule -> {
+                    LocalDate scheduleDate = schedule.getStartDate().toLocalDate();
+                    return scheduleDate.equals(selectedDate);
+                })
+                .forEach(scheduleListModel::addElement);
 
         scheduleList = new JList<>(scheduleListModel);
         scheduleList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -202,7 +208,7 @@ public class AddPlan extends JFrame {
         CategoryDialog dialog = new CategoryDialog(this, FileManager.categories, category -> {
             selectedCategory = category;
             categoryButton.setText("카테고리: " + selectedCategory.getName());
-            categoryButton.setBackground(selectedCategory.getColor());
+            categoryButton.setBackground(category.getColor());
         });
         dialog.setVisible(true);
     }
