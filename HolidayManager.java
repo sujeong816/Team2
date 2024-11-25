@@ -1,11 +1,13 @@
-package project1;
+package Project;
 
+import java.awt.Color;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
 public class HolidayManager {
     private Map<Integer, Map<LocalDate, String>> holidaysByYear;
+    private static final Color HOLIDAY_TEXT_COLOR = Color.RED; // 공휴일 이름 텍스트 색상 (빨간색)
 
     public HolidayManager() {
         holidaysByYear = new HashMap<>();
@@ -57,5 +59,9 @@ public class HolidayManager {
 
     public String getHolidayName(int year, LocalDate date) {
         return getHolidays(year).get(date);
+    }
+
+    public Color getHolidayTextColor() {
+        return HOLIDAY_TEXT_COLOR;
     }
 }
