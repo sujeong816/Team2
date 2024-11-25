@@ -1,14 +1,22 @@
-package project1;
+package Project;
 
+import Project.FileManager.Schedule;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ItemEvent;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class CalendarApp extends JFrame {
 
     private JLabel dateLabel;
     private JLabel timeLabel;
+    private JScrollPane[] schedulePanes = new JScrollPane[3];
+    private int[] schedulePaneSize = new int[3];
+    private List<JCheckBox> checkBoxes = new ArrayList<>();
 
     public CalendarApp() {
         setTitle("캘린더 애플리케이션");
@@ -63,18 +71,31 @@ public class CalendarApp extends JFrame {
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         controlPanel.setBackground(Color.WHITE);
         JComboBox<String> categoryComboBox = new JComboBox<>(new String[]{"전체", "카테고리1", "카테고리2"});
-        JCheckBox completeCheckBox = new JCheckBox("완료");
 
         controlPanel.add(new JLabel("카테고리:"));
         controlPanel.add(categoryComboBox);
-        controlPanel.add(completeCheckBox);
         summaryPanel.add(controlPanel, BorderLayout.NORTH); // 요약 상단에 추가
-
+        
+        // 스케쥴 패널 생성
+        for(int i=0; i<3; i++) {
+        	schedulePaneSize[i] = 0;
+        	schedulePanes[i] = createSchedulePanel(i);
+        }
+        
         // 탭 패널 추가
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("일정", createSchedulePanel());
-        tabbedPane.addTab("사진", createSchedulePanel());
-        tabbedPane.addTab("기타", createSchedulePanel());
+        
+        JPanel schedulePanel1 = new JPanel(null);
+        schedulePanel1.add(schedulePanes[0]);
+        tabbedPane.addTab("오늘", schedulePanel1);
+        JPanel schedulePanel2 = new JPanel(null);
+        schedulePanel2.add(schedulePanes[1]);
+        tabbedPane.addTab("이번 주", schedulePanel2);
+        JPanel schedulePanel3 = new JPanel(null);
+        schedulePanel3.add(schedulePanes[2]);
+        tabbedPane.addTab("이번 달", schedulePanel3);
+        
+        updateSchedulePaneSize();
 
         summaryPanel.add(tabbedPane, BorderLayout.CENTER);
         add(summaryPanel, BorderLayout.CENTER);
@@ -83,23 +104,35 @@ public class CalendarApp extends JFrame {
     }
 
     // 일정 패널 생성
-    private JScrollPane createSchedulePanel() {
-        JPanel schedulePanel = new JPanel();
-        schedulePanel.setLayout(new BoxLayout(schedulePanel, BoxLayout.Y_AXIS));
+    private JScrollPane createSchedulePanel(int flag) {
+    	JPanel schedulePanel = new JPanel();
+    	schedulePanel.setLayout(new BoxLayout(schedulePanel, BoxLayout.Y_AXIS));
         schedulePanel.setBackground(Color.WHITE);
-
-        for (int i = 0; i < 10; i++) {
-            schedulePanel.add(createScheduleItem("일정 " + (i + 1), "메모 내용 " + (i + 1),
-                    "2024-11-01", "2024-11-03"));
-            schedulePanel.add(Box.createVerticalStrut(10));
+        
+        List<Schedule> searched = new ArrayList<>();
+        switch(flag) {
+        case 0:
+        	searched = FileManager.getScheduleToday(LocalDate.now());
+        	break;
+        case 1:
+        	searched = FileManager.getScheduleWeek(LocalDate.now());
+        	break;
+        case 2:
+        	searched = FileManager.getScheduleMonth(LocalDate.now());
         }
-
+        
+        for (Schedule schedule : searched) {
+            schedulePanel.add(createScheduleItem(schedule, flag));
+            schedulePanel.add(Box.createVerticalStrut(5));
+        }
+        
         // 스타일 적용된 스크롤바 리턴
         return createStyledScrollPane(schedulePanel);
     }
     
-    private JScrollPane createStyledScrollPane(Component component) {
-        JScrollPane scrollPane = new JScrollPane(component);
+    private JScrollPane createStyledScrollPane(Component component) {JScrollPane scrollPane = new JScrollPane(component);
+    	scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setSize(824, 480);
         scrollPane.getViewport().setBackground(Color.WHITE);
         scrollPane.setBackground(Color.WHITE);
 
@@ -116,60 +149,83 @@ public class CalendarApp extends JFrame {
             }
         });
 
-        scrollPane.getHorizontalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
-            @Override
-            protected void configureScrollBarColors() {
-                this.thumbColor = Color.WHITE;
-                this.trackColor = new Color(230, 230, 230);
-            }
-        });
-
         return scrollPane;
     }
 
     // 일정 아이템 생성
-    private JPanel createScheduleItem(String title, String memo, String startDate, String endDate) {
+    private JPanel createScheduleItem(Schedule schedule, int flag) {
+    	schedulePaneSize[flag] += 55;
+    	
+    	JPanel returnPanel = new JPanel(null);
+    	returnPanel.setPreferredSize(new Dimension(810, 50));
+    	
+    	// schedule.setContent("asd\nqwe\nzxc");
+    	// schedule.setContent(schedule.getContent() + "\nasd\nqwe\nzxc\nrty\nfgh");
+    	
         JPanel itemPanel = new JPanel(new BorderLayout());
         itemPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        itemPanel.setPreferredSize(new Dimension(300, 100));
+        itemPanel.setSize(800, 50);
         itemPanel.setBackground(Color.WHITE);
 
         // 제목과 체크박스
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         topPanel.setBackground(Color.WHITE);
+        JLabel lbIsDone = new JLabel("완료됨");
+        lbIsDone.setFont(new Font("맑은 고딕", Font.BOLD, 14));
         JCheckBox checkBox = new JCheckBox();
-        JLabel titleLabel = new JLabel(title);
+        checkBox.setSelected(schedule.getIsDone());
+        // ActionListener를 update로 사용
+        checkBox.addActionListener(e -> {
+        	checkBox.setSelected(schedule.getIsDone());
+        });
+        checkBox.addItemListener(e -> {
+            if(e.getStateChange() == ItemEvent.SELECTED) {
+            	schedule.setIsDone(true);
+            } else {
+            	schedule.setIsDone(false);
+            }
+            updateCheckBoxes();
+            FileManager.SaveAllData();
+        });
+        checkBoxes.add(checkBox);
+        JLabel titleLabel = new JLabel(schedule.getTitle());
         titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16));
+        topPanel.add(lbIsDone);
         topPanel.add(checkBox);
         topPanel.add(titleLabel);
 
         // 날짜 표시
         JPanel datePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         datePanel.setBackground(Color.WHITE);
-        JLabel dateLabel = new JLabel("시작 날짜: " + startDate + " ~ 종료 날짜: " + endDate);
+        JLabel dateLabel = new JLabel("시작 날짜: " + schedule.getStartDate().toString() + " ~ 종료 날짜: " + schedule.getEndDate().toString());
         datePanel.add(dateLabel);
 
         // 메모 표시와 토글 버튼
-        JPanel memoPanel = new JPanel(new BorderLayout());
-        memoPanel.setBackground(Color.WHITE);
-        JLabel memoLabel = new JLabel("<html>" + memo.replace("\n", "<br>") + "</html>");
-        JButton toggleButton = createStyledButton("자세히");
-        memoLabel.setVisible(false); // 초기에는 숨김 상태
+        String contentStr = schedule.getContent().replace("\n", "<br>");
+        JLabel contentLabel = new JLabel(String.format("<html><div style='text-align: center;'> %s </div></html>", contentStr));
+        JButton toggleButton = createStyledButton("메모 표시");
+        toggleButton.setBounds(370, 30, 100, 20);
+        contentLabel.setVisible(false); // 초기에는 숨김 상태
+        int lineCount = schedule.getContent().split("\n").length;
         toggleButton.addActionListener(e -> {
-            memoLabel.setVisible(!memoLabel.isVisible());
-            toggleButton.setText(memoLabel.isVisible() ? "닫기" : "자세히");
+            contentLabel.setVisible(!contentLabel.isVisible());
+            toggleButton.setText(contentLabel.isVisible() ? "닫기" : "메모 표시");
+            returnPanel.setPreferredSize(new Dimension(810, contentLabel.isVisible() ? (50 + 20 * lineCount) : 50));
+            itemPanel.setSize(800, contentLabel.isVisible() ? (50 + 20 * lineCount) : 50);
+            schedulePaneSize[flag] += contentLabel.isVisible() ? (20 * lineCount) : (-20 * lineCount);
+            updateSchedulePaneSize();
             itemPanel.revalidate();
             itemPanel.repaint();
         });
 
-        memoPanel.add(memoLabel, BorderLayout.CENTER);
-        memoPanel.add(toggleButton, BorderLayout.SOUTH);
+        itemPanel.add(topPanel, BorderLayout.WEST);
+        itemPanel.add(datePanel, BorderLayout.EAST);
+        itemPanel.add(contentLabel, BorderLayout.SOUTH);
+        
+        returnPanel.add(toggleButton);
+        returnPanel.add(itemPanel);
 
-        itemPanel.add(topPanel, BorderLayout.NORTH);
-        itemPanel.add(datePanel, BorderLayout.CENTER);
-        itemPanel.add(memoPanel, BorderLayout.SOUTH);
-
-        return itemPanel;
+        return returnPanel;
     }
 
     // 날짜와 시간을 업데이트하는 메서드
@@ -178,6 +234,20 @@ public class CalendarApp extends JFrame {
         SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss");
         dateLabel.setText("현재 날짜: " + dateFormatter.format(new Date()));
         timeLabel.setText("현재 시간: " + timeFormatter.format(new Date()));
+    }
+    
+    // 스케쥴 패널 크기 조정
+    private void updateSchedulePaneSize() {
+    	for(int i=0; i<3; i++) {
+    		schedulePanes[i].setSize(820, schedulePaneSize[i] > 480 ? 480 : schedulePaneSize[i]);
+    	}
+    }
+    
+    // 다른 패널에 있는 페크박스 표시 상태 동기화
+    private void updateCheckBoxes() {
+    	for(JCheckBox checkBox : checkBoxes) {
+    		checkBox.getActionListeners()[0].actionPerformed(null);
+    	}
     }
 
     // 스타일 버튼 생성
@@ -191,9 +261,8 @@ public class CalendarApp extends JFrame {
     }
     
     private void openCalendarService() {
-        CalendarService calendarService = new CalendarService();
-        calendarService.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        calendarService.setVisible(true);
+        dispose(); // 현재 창 닫기
+        SwingUtilities.invokeLater(() -> new CalendarService().setVisible(true));
     }
 
     private void openAddPlan() {
@@ -203,6 +272,7 @@ public class CalendarApp extends JFrame {
     }
 
     public static void main(String[] args) {
+    	FileManager.LoadSaveData();
         SwingUtilities.invokeLater(CalendarApp::new);
     }
 }
