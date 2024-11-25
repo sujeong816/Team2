@@ -106,7 +106,11 @@ public class CalendarService extends JFrame {
         // FileManager의 getScheduleMonth 함수 호출
         List<FileManager.Schedule> schedules = FileManager.getScheduleMonth(selectedDate);
 
-        // 일정 내용을 담을 패널 생성 (여기에서 contentPanel 정의)
+        // 일정 데이터를 시작 날짜 기준으로 정렬, 동일한 시작 날짜일 경우 종료 날짜 기준으로 정렬
+        schedules.sort(Comparator.comparing((FileManager.Schedule schedule) -> schedule.getStartDate().toLocalDate())
+                                 .thenComparing(schedule -> schedule.getEndDate().toLocalDate()));
+
+        // 일정 내용을 담을 패널 생성
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS)); // 세로 방향 레이아웃
 
@@ -144,6 +148,7 @@ public class CalendarService extends JFrame {
         panel.revalidate(); // 패널 레이아웃 재검토
         panel.repaint(); // 화면 갱신
     }
+
 
 
 
