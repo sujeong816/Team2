@@ -1,4 +1,4 @@
-package project1;
+package Project;
 
 import java.awt.Color;
 import java.io.*;
@@ -12,6 +12,7 @@ public class FileManager {
     // 카테고리와 일정 데이터를 저장하는 리스트
     public static List<Category> categories = new ArrayList<>();
     public static List<Schedule> schedules = new ArrayList<>();
+    public static final Category defaultCategory = new Category("일반", Color.GRAY);
 
     // Category 클래스
     public static class Category implements Serializable{
@@ -60,6 +61,8 @@ public class FileManager {
         }
 
         public Category getCategory() {
+        	if(category == null)
+                category = defaultCategory;
             return category;
         }
 
@@ -100,7 +103,7 @@ public class FileManager {
         }
 
         public void setIsDone(boolean isDone) {
-            this.isDone = false;
+            this.isDone = isDone;
 
         }
     }
