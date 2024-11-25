@@ -46,7 +46,6 @@ public class HolidayManager {
     }
 
     private LocalDate convertLunarToSolar(int year, int lunarMonth, int lunarDay) {
-        // 음력-양력 변환 예제. 실제로는 외부 라이브러리를 사용해야 함.
         if (lunarMonth == 1 && lunarDay == 1) return LocalDate.of(year, 2, 10); // 설날 예제
         if (lunarMonth == 8 && lunarDay == 15) return LocalDate.of(year, 9, 19); // 추석 예제
         if (lunarMonth == 4 && lunarDay == 8) return LocalDate.of(year, 5, 27); // 부처님오신날 예제
