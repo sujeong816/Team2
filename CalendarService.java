@@ -46,23 +46,12 @@ public class CalendarService extends JFrame {
         monthSchedulePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // 패널 내부 여백 추가
         updateMonthSchedulePanel(monthSchedulePanel); // 이번달 일정 데이터 추가
         tabbedPane.addTab("이번달 일정", monthSchedulePanel); // 탭 추가
-
+        
         // 버튼 패널 생성 및 설정
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT)); // 버튼 오른쪽 정렬
-        JButton refreshButton = new JButton("새로고침"); // 새로고침 버튼 생성
-        refreshButton.setPreferredSize(new Dimension(90, 30)); // 버튼 크기 설정
-        refreshButton.setBackground(new Color(34, 139, 34)); // 녹색
-        refreshButton.setForeground(Color.WHITE); // 흰색 글씨
-        refreshButton.setFont(new Font("맑은 고딕", Font.BOLD, 14));
-        refreshButton.setFocusPainted(false);
-        refreshButton.addActionListener(e -> {
-            updateCategoryComboBox(); // 카테고리 콤보박스 갱신
-            calendarPanel.updateDatesWithCategory((String) categoryComboBox.getSelectedItem()); // 선택된 카테고리로 캘린더 업데이트
-            updateMonthSchedulePanel(monthSchedulePanel); // 일정 패널 업데이트
-        });
 
         JButton mainButton = new JButton("메인화면"); // 메인화면 이동 버튼
-        mainButton.setPreferredSize(new Dimension(90, 30)); // 버튼 크기 설정
+        mainButton.setPreferredSize(new Dimension(190, 30)); // 버튼 크기 설정
         mainButton.setBackground(new Color(34, 139, 34)); // 녹색
         mainButton.setForeground(Color.WHITE); // 흰색 글씨
         mainButton.setFont(new Font("맑은 고딕", Font.BOLD, 14));
@@ -73,8 +62,8 @@ public class CalendarService extends JFrame {
             SwingUtilities.invokeLater(() -> new CalendarApp().setVisible(true)); // 메인화면 실행
         });
 
-        buttonPanel.add(refreshButton); // 새로고침 버튼 추가
-        buttonPanel.add(mainButton); // 메인화면 버튼 추가
+        // 버튼 패널에 메인 버튼 추가
+        buttonPanel.add(mainButton);
 
         // 왼쪽 패널에 일정 탭 및 버튼 패널 추가
         JPanel westPanelContent = new JPanel(new BorderLayout());
@@ -89,7 +78,12 @@ public class CalendarService extends JFrame {
         setSize(1000, 600); // 창 크기 설정
         setLocationRelativeTo(null); // 창을 화면 중앙에 위치
         setVisible(true); // 창 보이기
+
+        // 기본 카테고리로 캘린더 초기화
+        calendarPanel.updateDatesWithCategory(FileManager.defaultCategory.getName());
     }
+
+
 
     // 일정 탭 업데이트 메서드
     public void updateScheduleTab() {
@@ -158,16 +152,25 @@ public class CalendarService extends JFrame {
     private void updateCategoryComboBox() {
         categoryComboBox.removeAllItems(); // 기존 항목 제거
 
-        Set<String> uniqueCategoryNames = new HashSet<>(); // 중복 방지
+        // 기본 카테고리를 콤보박스에 추가
+        categoryComboBox.addItem(FileManager.defaultCategory.getName());
+
+        // 중복되지 않은 카테고리 이름 추가
+        Set<String> uniqueCategoryNames = new HashSet<>();
         for (FileManager.Schedule schedule : FileManager.schedules) {
             if (schedule.getCategory() != null) {
-                uniqueCategoryNames.add(schedule.getCategory().getName()); // 카테고리 추가
+                uniqueCategoryNames.add(schedule.getCategory().getName());
             }
         }
 
         for (String categoryName : uniqueCategoryNames) {
-            categoryComboBox.addItem(categoryName); // 콤보박스에 추가
+            if (!categoryName.equals(FileManager.defaultCategory.getName())) {
+                categoryComboBox.addItem(categoryName);
+            }
         }
+
+        // 기본 카테고리를 선택
+        categoryComboBox.setSelectedItem(FileManager.defaultCategory.getName());
 
         // 카테고리 선택 이벤트
         categoryComboBox.addActionListener(e -> {
@@ -179,6 +182,7 @@ public class CalendarService extends JFrame {
         categoryComboBox.revalidate();
         categoryComboBox.repaint();
     }
+
 
     // 캘린더 화면 패널
     class CalendarPanel extends JPanel {
@@ -232,9 +236,15 @@ public class CalendarService extends JFrame {
             }
             updateMonthLabel();
             addDates();
-            updateDatesWithCategory((String) categoryComboBox.getSelectedItem());
+
+            // 카테고리를 기본 카테고리로 리셋
+            categoryComboBox.setSelectedItem(FileManager.defaultCategory.getName());
+            updateDatesWithCategory(FileManager.defaultCategory.getName());
+
+            // 일정 패널 업데이트
             updateMonthSchedulePanel((JPanel) tabbedPane.getComponentAt(0));
         }
+
 
         private void updateMonthLabel() {
             if (year == 0 && month == 0) {
@@ -312,7 +322,18 @@ public class CalendarService extends JFrame {
 
                 // 버튼 클릭 이벤트 추가
                 dayButton.addActionListener(e -> {
-                    SwingUtilities.invokeLater(() -> new AddPlan(currentDate));
+                    AddPlan addPlan = new AddPlan(currentDate);
+                    
+                    // AddPlan 창에 WindowListener 추가
+                    addPlan.addWindowListener(new java.awt.event.WindowAdapter() {
+                        @Override
+                        public void windowClosed(java.awt.event.WindowEvent e) {
+                            // AddPlan 창이 닫힐 때 호출
+                            updateUIComponents();
+                        }
+                    });
+
+                    addPlan.setVisible(true);
                 });
 
                 datePanel.add(dayButton); // 버튼을 패널에 추가
@@ -327,12 +348,22 @@ public class CalendarService extends JFrame {
             datePanel.revalidate();
             datePanel.repaint();
         }
+        
+        public void updateUIComponents() {
+            // 카테고리 콤보박스 갱신
+            updateCategoryComboBox();
 
+            // 현재 선택된 카테고리 가져오기
+            String selectedCategory = (String) categoryComboBox.getSelectedItem();
 
+            // 캘린더 화면 갱신
+            calendarPanel.updateDatesWithCategory(selectedCategory);
 
+            // 일정 탭 갱신
+            updateScheduleTab();
+        }
 
-
-
+        
         public void updateDatesWithCategory(String categoryName) {
             for (Component comp : datePanel.getComponents()) {
                 if (comp instanceof JButton button) {

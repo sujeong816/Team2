@@ -24,7 +24,7 @@ public class HolidayManager {
     }
 
     private void addFixedHolidays(int year, Map<LocalDate, String> holidays) {
-        holidays.put(LocalDate.of(year, 1, 1), "신정");
+        holidays.put(LocalDate.of(year, 1, 1), "새해");
         holidays.put(LocalDate.of(year, 3, 1), "삼일절");
         holidays.put(LocalDate.of(year, 5, 5), "어린이날");
         holidays.put(LocalDate.of(year, 6, 6), "현충일");
