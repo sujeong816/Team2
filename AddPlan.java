@@ -176,23 +176,20 @@ public class AddPlan extends JFrame {
             }
 
             if (selectedCategory == null) {
-                JOptionPane.showMessageDialog(this, "카테고리를 선택하세요.", "카테고리 오류", JOptionPane.ERROR_MESSAGE);
-                return;
+                selectedCategory = FileManager.defaultCategory;
             }
 
             FileManager.Schedule newSchedule = new FileManager.Schedule(
                     selectedCategory, titleField.getText(), memoField.getText(), startDateTime, endDateTime);
 
-            if (isEditMode) {
-                scheduleListModel.set(editIndex, newSchedule);
-                FileManager.schedules.set(editIndex, newSchedule);
-                exitEditMode();
-            } else {
+            FileManager.addSchedule(newSchedule);
+
+            if (newSchedule.getStartDate().toLocalDate().equals(selectedDate)) {
                 scheduleListModel.addElement(newSchedule);
-                FileManager.addSchedule(newSchedule);
             }
 
             FileManager.SaveAllData();
+            JOptionPane.showMessageDialog(this, "일정이 추가되었습니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
         });
 
         rightPanel.add(Box.createVerticalStrut(10));
@@ -241,19 +238,7 @@ public class AddPlan extends JFrame {
         editIndex = index;
         addButton.setText("수정하기");
     }
-
-    private void exitEditMode() {
-        titleField.setText("");
-        memoField.setText("");
-        startDateTimeSpinner.setValue(new Date());
-        endDateTimeSpinner.setValue(new Date());
-        categoryButton.setText("카테고리 선택");
-        categoryButton.setBackground(null);
-        selectedCategory = null;
-        isEditMode = false;
-        addButton.setText("추가하기");
-    }
-
+    
     private static class ScheduleRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -290,4 +275,5 @@ public class AddPlan extends JFrame {
             return 10;
         }
     }
+
 }
