@@ -151,6 +151,16 @@ public class CalendarApp extends JFrame {
 
         return scrollPane;
     }
+    
+    // 스타일 버튼 생성
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setBackground(new Color(34, 139, 34)); // 녹색
+        button.setForeground(Color.WHITE); // 흰색 글씨
+        button.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        button.setFocusPainted(false);
+        return button;
+    }
 
     // 일정 아이템 생성
     private JPanel createScheduleItem(Schedule schedule, int flag) {
@@ -249,16 +259,6 @@ public class CalendarApp extends JFrame {
     		checkBox.getActionListeners()[0].actionPerformed(null);
     	}
     }
-
-    // 스타일 버튼 생성
-    private JButton createStyledButton(String text) {
-        JButton button = new JButton(text);
-        button.setBackground(new Color(34, 139, 34)); // 녹색
-        button.setForeground(Color.WHITE); // 흰색 글씨
-        button.setFont(new Font("맑은 고딕", Font.BOLD, 14));
-        button.setFocusPainted(false);
-        return button;
-    }
     
     private void openCalendarService() {
         dispose(); // 현재 창 닫기
@@ -266,8 +266,18 @@ public class CalendarApp extends JFrame {
     }
 
     private void openAddPlan() {
-        AddPlan addPlan = new AddPlan();
-        addPlan.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    	AddPlan addPlan = new AddPlan();
+        
+        // AddPlan 창에 WindowListener 추가
+        addPlan.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                // AddPlan 창이 닫힐 때 호출
+            	dispose(); // 현재 창 닫기
+                SwingUtilities.invokeLater(() -> new CalendarApp().setVisible(true));
+            }
+        });
+
         addPlan.setVisible(true);
     }
 
