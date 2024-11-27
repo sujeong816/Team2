@@ -210,7 +210,7 @@ public class FileManager {
 		int days = 6 - date.getDayOfWeek().ordinal();
 		for(Schedule schedule : schedules)
 		{
-			if(schedule.endDate.toLocalDate().isBefore(date) || schedule.startDate.toLocalDate().isAfter(date.plusDays(days)))
+			if(schedule.endDate.toLocalDate().isBefore(date.minusDays(date.getDayOfWeek().ordinal())) || schedule.startDate.toLocalDate().isAfter(date.plusDays(days)))
 				continue;
 			
 			searched.add(schedule);
