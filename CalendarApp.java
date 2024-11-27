@@ -7,8 +7,11 @@ import java.awt.event.ItemEvent;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CalendarApp extends JFrame {
 
@@ -17,6 +20,8 @@ public class CalendarApp extends JFrame {
     private JScrollPane[] schedulePanes = new JScrollPane[3];
     private int[] schedulePaneSize = new int[3];
     private List<JCheckBox> checkBoxes = new ArrayList<>();
+    private JTabbedPane tabbedPane;
+    private JComboBox<String> categoryComboBox;
 
     public CalendarApp() {
         setTitle("캘린더 애플리케이션");
@@ -70,20 +75,63 @@ public class CalendarApp extends JFrame {
         // 필터 패널 추가
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         controlPanel.setBackground(Color.WHITE);
-        JComboBox<String> categoryComboBox = new JComboBox<>(new String[]{"전체", "카테고리1", "카테고리2"});
+
+        updateCategoryComboBox();
 
         controlPanel.add(new JLabel("카테고리:"));
         controlPanel.add(categoryComboBox);
         summaryPanel.add(controlPanel, BorderLayout.NORTH); // 요약 상단에 추가
+        
+        // 탭 패널 추가
+        tabbedPane = new JTabbedPane();
+        updateTabbedPane();
+        
+        updateSchedulePaneSize();
+
+        summaryPanel.add(tabbedPane, BorderLayout.CENTER);
+        add(summaryPanel, BorderLayout.CENTER);
+
+        setVisible(true);
+    }
+    
+    // categoryComboBox update
+    private void updateCategoryComboBox() {
+    	if(categoryComboBox == null)
+    		categoryComboBox = new JComboBox<>();
+    	
+    	categoryComboBox.removeAllItems();
+    	
+        categoryComboBox.addItem("전체");
+        // 기본 카테고리를 콤보박스에 추가
+        categoryComboBox.addItem(FileManager.defaultCategory.getName());
+        // 중복되지 않은 카테고리 이름 추가
+        Set<String> uniqueCategoryNames = new HashSet<>();
+        for (FileManager.Schedule schedule : FileManager.schedules) {
+            if (schedule.getCategory() != null) {
+                uniqueCategoryNames.add(schedule.getCategory().getName());
+            }
+        }
+        for (String categoryName : uniqueCategoryNames) {
+            if (!categoryName.equals(FileManager.defaultCategory.getName())) {
+                categoryComboBox.addItem(categoryName);
+            }
+        }
+        categoryComboBox.addActionListener(e -> {
+            String selectedCategory = (String) categoryComboBox.getSelectedItem();
+            System.out.println("Selected Category: " + selectedCategory); // 디버깅 메시지
+            updateTabbedPane();
+        });
+    }
+    
+    // tabbedPane update
+    private void updateTabbedPane() {
+    	tabbedPane.removeAll();
         
         // 스케쥴 패널 생성
         for(int i=0; i<3; i++) {
         	schedulePaneSize[i] = 0;
         	schedulePanes[i] = createSchedulePanel(i);
         }
-        
-        // 탭 패널 추가
-        JTabbedPane tabbedPane = new JTabbedPane();
         
         JPanel schedulePanel1 = new JPanel(null);
         schedulePanel1.add(schedulePanes[0]);
@@ -96,11 +144,6 @@ public class CalendarApp extends JFrame {
         tabbedPane.addTab("이번 달", schedulePanel3);
         
         updateSchedulePaneSize();
-
-        summaryPanel.add(tabbedPane, BorderLayout.CENTER);
-        add(summaryPanel, BorderLayout.CENTER);
-
-        setVisible(true);
     }
 
     // 일정 패널 생성
@@ -121,7 +164,13 @@ public class CalendarApp extends JFrame {
         	searched = FileManager.getScheduleMonth(LocalDate.now());
         }
         
+        searched.sort(Comparator.comparing((FileManager.Schedule schedule) -> schedule.getStartDate().toLocalDate())
+        		.thenComparing(schedule -> schedule.getEndDate().toLocalDate()));
+        
         for (Schedule schedule : searched) {
+        	if(categoryComboBox.getSelectedIndex() != 0)
+        		if(!(schedule.getCategory().getName().equals(categoryComboBox.getSelectedItem())))
+        				continue;
             schedulePanel.add(createScheduleItem(schedule, flag));
             schedulePanel.add(Box.createVerticalStrut(5));
         }
@@ -273,8 +322,8 @@ public class CalendarApp extends JFrame {
             @Override
             public void windowClosed(java.awt.event.WindowEvent e) {
                 // AddPlan 창이 닫힐 때 호출
-            	dispose(); // 현재 창 닫기
-                SwingUtilities.invokeLater(() -> new CalendarApp().setVisible(true));
+            	updateCategoryComboBox();
+            	updateTabbedPane();
             }
         });
 
