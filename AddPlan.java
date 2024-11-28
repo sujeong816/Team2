@@ -182,14 +182,22 @@ public class AddPlan extends JFrame {
             FileManager.Schedule newSchedule = new FileManager.Schedule(
                     selectedCategory, titleField.getText(), memoField.getText(), startDateTime, endDateTime);
 
-            FileManager.addSchedule(newSchedule);
-
-            if (newSchedule.getStartDate().toLocalDate().equals(selectedDate)) {
-                scheduleListModel.addElement(newSchedule);
+            
+            if (isEditMode) {
+                // 수정 모드일 경우 기존 일정 수정
+                scheduleListModel.set(editIndex, newSchedule);
+                FileManager.schedules.set(editIndex, newSchedule);
+                JOptionPane.showMessageDialog(this, "일정이 수정되었습니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
+                isEditMode = false; // 수정 모드 해제
+                addButton.setText("추가하기"); // 버튼 텍스트를 다시 '추가하기'로 변경
+            } else {
+                // 추가 모드일 경우 새 일정 추가
+                FileManager.addSchedule(newSchedule);
+                if (newSchedule.getStartDate().toLocalDate().equals(selectedDate)) {
+                    scheduleListModel.addElement(newSchedule);
+                }
+                JOptionPane.showMessageDialog(this, "일정이 추가되었습니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
             }
-
-            FileManager.SaveAllData();
-            JOptionPane.showMessageDialog(this, "일정이 추가되었습니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
         });
 
         rightPanel.add(Box.createVerticalStrut(10));
