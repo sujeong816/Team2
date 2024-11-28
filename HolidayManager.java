@@ -46,9 +46,9 @@ public class HolidayManager {
     }
 
     private LocalDate convertLunarToSolar(int year, int lunarMonth, int lunarDay) {
-        if (lunarMonth == 1 && lunarDay == 1) return LocalDate.of(year, 2, 10); // 설날 예제
-        if (lunarMonth == 8 && lunarDay == 15) return LocalDate.of(year, 9, 19); // 추석 예제
-        if (lunarMonth == 4 && lunarDay == 8) return LocalDate.of(year, 5, 27); // 부처님오신날 예제
+        if (lunarMonth == 1 && lunarDay == 1) return LocalDate.of(year, 2, 10); // 설날 
+        if (lunarMonth == 8 && lunarDay == 15) return LocalDate.of(year, 9, 17); // 추석
+        if (lunarMonth == 4 && lunarDay == 8) return LocalDate.of(year, 5, 15); // 부처님오신날
         return null;
     }
 

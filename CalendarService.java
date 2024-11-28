@@ -29,10 +29,12 @@ public class CalendarService extends JFrame {
 
         // 왼쪽 패널 구성
         JPanel westPanel = new JPanel(new BorderLayout(5, 5));
+        westPanel.setBackground(Color.WHITE); // 왼쪽 전체 배경 흰색
         westPanel.setPreferredSize(new Dimension(200, 0)); // 왼쪽 패널 너비 설정
 
         // 카테고리 패널 구성
         JPanel categoryPanel = new JPanel();
+        categoryPanel.setBackground(Color.WHITE); // 카테고리 패널 배경 흰색
         categoryPanel.setLayout(new BoxLayout(categoryPanel, BoxLayout.Y_AXIS)); // 세로 배치
         categoryPanel.setBorder(BorderFactory.createTitledBorder("카테고리")); // 테두리 제목 설정
         categoryComboBox = new JComboBox<>();
@@ -49,6 +51,7 @@ public class CalendarService extends JFrame {
         
         // 버튼 패널 생성 및 설정
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT)); // 버튼 오른쪽 정렬
+        buttonPanel.setBackground(Color.WHITE); // 버튼 패널 배경 흰색
 
         JButton mainButton = new JButton("메인화면"); // 메인화면 이동 버튼
         mainButton.setPreferredSize(new Dimension(190, 30)); // 버튼 크기 설정
@@ -67,6 +70,7 @@ public class CalendarService extends JFrame {
 
         // 왼쪽 패널에 일정 탭 및 버튼 패널 추가
         JPanel westPanelContent = new JPanel(new BorderLayout());
+        westPanelContent.setBackground(Color.WHITE); // 왼쪽 패널 콘텐츠 배경 흰색
         westPanelContent.add(tabbedPane, BorderLayout.CENTER); // 일정 탭 추가
         westPanelContent.add(buttonPanel, BorderLayout.SOUTH); // 버튼 패널 추가
 
@@ -97,6 +101,7 @@ public class CalendarService extends JFrame {
 
     private void updateMonthSchedulePanel(JPanel panel) {
         panel.removeAll(); // 기존 데이터 제거
+        panel.setBackground(Color.WHITE); // 이번달 일정 탭 배경 흰색
 
         // 현재 선택된 연도와 달 가져오기
         int selectedYear = calendarPanel.year;
@@ -113,6 +118,7 @@ public class CalendarService extends JFrame {
         // 일정 내용을 담을 패널 생성
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS)); // 세로 방향 레이아웃
+        contentPanel.setBackground(Color.WHITE); // 일정 내용 패널 배경 흰색
 
         // 가져온 일정 데이터를 contentPanel에 추가
         for (FileManager.Schedule schedule : schedules) {
@@ -148,10 +154,6 @@ public class CalendarService extends JFrame {
         panel.revalidate(); // 패널 레이아웃 재검토
         panel.repaint(); // 화면 갱신
     }
-
-
-
-
 
     // 카테고리 콤보박스 업데이트
     private void updateCategoryComboBox() {
@@ -198,8 +200,10 @@ public class CalendarService extends JFrame {
 
         public CalendarPanel() {
             setLayout(new BorderLayout());
+            setBackground(Color.WHITE); // CalendarPanel 전체 배경 흰색
 
             JPanel navPanel = new JPanel();
+            navPanel.setBackground(Color.WHITE); // 내비게이션 패널 배경 흰색
             JButton prevButton = new JButton("<");
             JButton nextButton = new JButton(">");
             prevButton.setBackground(new Color(34, 139, 34)); // 녹색
@@ -212,6 +216,7 @@ public class CalendarService extends JFrame {
             nextButton.setFocusPainted(false);
             
             monthLabel = new JLabel("", JLabel.CENTER);
+            monthLabel.setBackground(Color.WHITE); // 월 표시 레이블 배경 흰색
             updateMonthLabel();
 
             prevButton.addActionListener(e -> changeMonth(-1)); // 이전 달로 이동
@@ -223,6 +228,7 @@ public class CalendarService extends JFrame {
             add(navPanel, BorderLayout.NORTH);
 
             datePanel = new JPanel(new GridLayout(7, 7)); // 7x7 달력 그리드
+            datePanel.setBackground(Color.WHITE); // 날짜 패널 배경 흰색
             addDaysOfWeek();
             addDates();
             add(datePanel, BorderLayout.CENTER);
@@ -408,10 +414,6 @@ public class CalendarService extends JFrame {
 
             datePanel.repaint(); // 화면 갱신
         }
-
-
-
-
     }
 
     public static void main(String[] args) {
